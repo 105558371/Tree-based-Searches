@@ -1,6 +1,6 @@
 import re
 
-NODE_PATTERN = re.compile(r"(\d+)\s*:\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)")
+NODE_PATTERN = re.compile(r"(\d+)\s*:\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)")
 EDGE_PATTERN = re.compile(r"\(\s*(\d+)\s*,\s*(\d+)\s*\)\s*:\s*(-?\d+(?:\.\d+)?)")
 SECTION_HEADERS = {
     "nodes:": "nodes",
@@ -32,9 +32,13 @@ def parse_graph(filename):
             if not line:    # Skip empty lines
                 continue
 
-            if line.lower() in SECTION_HEADERS:
-                current_section = SECTION_HEADERS[line.lower()]
-                continue
+            # Value may follow the header, e.g. "Origin: 2"
+            header = next((h for h in SECTION_HEADERS if line.lower().startswith(h)), None)
+            if header:
+                current_section = SECTION_HEADERS[header]
+                line = line[len(header):].strip()
+                if not line:
+                    continue
 
             try:
                 if current_section == "nodes":
@@ -46,7 +50,7 @@ def parse_graph(filename):
                 elif current_section == "destinations":
                     add_destinations(destinations, line)
                 else:
-                    raise ValueError("Data found outside a section")
+                    raise ValueError(f"'{line}' is not inside a section. The file should start with 'Nodes:'")
             except ValueError as error:
                 raise ValueError(f"{filename}, line {line_num}: {error}") from error
 
@@ -54,13 +58,18 @@ def parse_graph(filename):
     return nodes, edges, origin, destinations
 
 
+def to_number(text):
+    value = float(text)
+    return int(value) if value.is_integer() else value
+
+
 def add_node(nodes, edges, line):
     """Parse a node line. An exact duplicate is ignored; different coordinates conflict."""
     match = NODE_PATTERN.fullmatch(line)
     if not match:
-        raise ValueError("Invalid node format")
+        raise ValueError(f"Invalid node '{line}'. Expected a node like: 1: (4,1)")
 
-    node_id, x, y = map(int, match.groups())
+    node_id, x, y = int(match[1]), to_number(match[2]), to_number(match[3])
     if node_id in nodes and nodes[node_id] != (x, y):
         raise ValueError(f"Node {node_id} already defined as {nodes[node_id]}")
 
@@ -72,11 +81,11 @@ def add_edge(edges, line):
     """Parse an edge line. An exact duplicate is ignored; a different cost conflicts."""
     match = EDGE_PATTERN.fullmatch(line)
     if not match:
-        raise ValueError("Invalid edge format")
+        raise ValueError(f"Invalid edge '{line}'. Expected an edge like: (2,1): 4")
 
     source, target, cost = int(match[1]), int(match[2]), float(match[3])
     if cost < 0:
-        raise ValueError("Edge costs cannot be negative")
+        raise ValueError(f"Edge ({source},{target}) has a negative cost; costs must be 0 or more")
 
     old_cost = edges.get(source, {}).get(target)
     if old_cost is not None and old_cost != cost:
@@ -89,7 +98,7 @@ def add_edge(edges, line):
 def read_origin(origin, line):
     """Parse an origin line and return it. The same value again is ignored; a different one conflicts."""
     if not re.fullmatch(r"\d+", line):
-        raise ValueError("Invalid origin format")
+        raise ValueError(f"Invalid origin '{line}'. Expected one node number, e.g. 2")
 
     new_origin = int(line)
     if origin is not None and origin != new_origin:
@@ -105,7 +114,7 @@ def add_destinations(destinations, line):
         if not part:    # Allow a trailing ";"
             continue
         if not re.fullmatch(r"\d+", part):
-            raise ValueError("Invalid destination format")
+            raise ValueError(f"Invalid destination '{part}'. Expected node numbers separated by ';', e.g. 5; 4")
 
         destinations.add(int(part))
 
@@ -120,13 +129,13 @@ def validate_graph(filename, nodes, edges, origin, destinations):
         raise ValueError(f"{filename}: No destinations found")
 
     if origin not in nodes:
-        raise ValueError(f"{filename}: Origin node {origin} does not exist")
+        raise ValueError(f"{filename}: The origin {origin} is not listed under 'Nodes:'")
     for d in destinations:
         if d not in nodes:
-            raise ValueError(f"{filename}: Destination node {d} does not exist")
+            raise ValueError(f"{filename}: Destination {d} is not listed under 'Nodes:'")
     for source, adjacent in edges.items():
-        if source not in nodes:
-            raise ValueError(f"{filename}: Source node {source} does not exist")
         for target in adjacent:
-            if target not in nodes:
-                raise ValueError(f"{filename}: Target node {target} does not exist")
+            for end in (source, target):
+                if end not in nodes:
+                    raise ValueError(f"{filename}: Edge ({source},{target}) uses node {end}, "
+                                     f"which is not listed under 'Nodes:'")
