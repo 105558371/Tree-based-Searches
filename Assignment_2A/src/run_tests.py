@@ -3,8 +3,8 @@ import csv
 import os
 import sys
 import time
-from parser import parse_graph
-from search import METHODS
+from Assignment_2A.src.parser import parse_graph
+from Assignment_2A.src.search import METHODS
 
 TEST_DIR = "tests"
 EXPECTED_FILE = os.path.join(TEST_DIR, "expected.csv")

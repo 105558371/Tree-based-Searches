@@ -1,7 +1,7 @@
 import math
 import heapq
 from collections import deque
-from utils import (MAX_NODES, get_sorted_neighbors, heuristic_table, same_cost,
+from Assignment_2A.src.utils import (MAX_NODES, get_sorted_neighbors, heuristic_table, same_cost,
                    on_path, path_to_list)
 
 # Each search returns (path, nodes_created); path is None if no solution or MAX_NODES hit.

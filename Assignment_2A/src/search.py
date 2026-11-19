@@ -1,8 +1,8 @@
 import sys
-from parser import parse_graph
-from algos import depth_first_tree_search, breadth_first_tree_search, greedy_best_first_tree_search, a_star_tree_search, uniform_cost_tree_search, iterative_deepening_a_star
-from research import visit_all_destinations
-from utils import MAX_NODES
+from Assignment_2A.src.parser import parse_graph
+from Assignment_2A.src.algos import depth_first_tree_search, breadth_first_tree_search, greedy_best_first_tree_search, a_star_tree_search, uniform_cost_tree_search, iterative_deepening_a_star
+from Assignment_2A.src.research import visit_all_destinations
+from Assignment_2A.src.utils import MAX_NODES
 
 METHODS = {
     "DFS": (depth_first_tree_search, "depth-first search"),

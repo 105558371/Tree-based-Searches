@@ -1,6 +1,6 @@
 import math
 from itertools import permutations
-from algos import uniform_cost_tree_search
+from Assignment_2A.src.algos import uniform_cost_tree_search
 
 MAX_DESTINATIONS = 8    # 8! = 40,320 orders
 
