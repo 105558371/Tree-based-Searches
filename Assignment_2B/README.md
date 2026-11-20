@@ -26,7 +26,8 @@ Assignment_2B/
 
 ## Setup
 ```
-pip install torch pandas numpy folium
+cd .\Assignment_2B\
+pip install -r requirements.txt
 ```
 
 ## Usage
