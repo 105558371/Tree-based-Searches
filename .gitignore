@@ -1,3 +1,8 @@
 __pycache__
 venv
 Assignment_2B\docs\part_c
+Assignment_2B\gui\.gitkeep
+Assignment_2B\models\.gitkeep
+Assignment_2B\outputs\weights\basic\.gitkeep
+Assignment_2B\outputs\weights\research\.gitkeep
+Assignment_2B\tests\.gitkeep
