@@ -1,132 +1,62 @@
-"""Grid search over learning rate and hidden units for LSTM, GRU, and GNN.
-Usage: python -m core.tune --sites 10 --days 180 --epochs 10"""
-import argparse, itertools, json, time
+"""Grid search over learning rate, hidden units and layers for each model.
+Every model gets the same grid, epochs and seed, so the tuning effort is equal.
+Usage: python -m core.tune --npz data/processed/scats_research_lb12.npz --tag research"""
+import argparse
+import itertools
+import json
+import time
 from pathlib import Path
-import numpy as np, pandas as pd, torch, torch.nn as nn
-from numpy.lib.stride_tricks import sliding_window_view
-from torch.utils.data import DataLoader, TensorDataset
-from core.travel_time import haversine_km
 
-VCOLS = [f"V{i:02d}" for i in range(96)]
-LOOKBACK = 12                                   # 12 x 15 min = 3 h history
-LRS = [1e-3, 5e-3, 1e-2]
-HIDDEN = [32, 64, 128]
-LOG_DIR = Path("outputs/logs")
+import pandas as pd
 
-class RNNNet(nn.Module):                        # swap for models/ classes if available
-    def __init__(self, kind, hidden):
-        super().__init__()
-        self.rnn = (nn.LSTM if kind == "lstm" else nn.GRU)(1, hidden, batch_first=True)
-        self.fc = nn.Linear(hidden, 1)
-    def forward(self, x):
-        out, _ = self.rnn(x)
-        return self.fc(out[:, -1])
+from core.data_processing import load_dataset
+from core.models import LAYOUT, build_model
+from core.trainer import fit, get_device
 
-class GCNNet(nn.Module):
-    """2-layer graph conv over sites. Input (B, N, T) -> predicts next step for all N sites (B, N)."""
-    def __init__(self, A_hat, hidden):
-        super().__init__()
-        self.register_buffer("A", torch.tensor(A_hat, dtype=torch.float32))
-        self.l1 = nn.Linear(LOOKBACK, hidden)
-        self.l2 = nn.Linear(hidden, hidden)
-        self.out = nn.Linear(hidden, 1)
-    def forward(self, x):
-        h = torch.relu(self.A @ self.l1(x))
-        h = torch.relu(self.A @ self.l2(h))
-        return self.out(h).squeeze(-1)
 
-def load_graph_data(path, n_sites, n_days):
-    df = pd.read_csv(path)
-    sites = sorted(df["SCATS Number"].unique())[:n_sites]
-    df = df[df["SCATS Number"].isin(sites)]
-    # only days present at every site, so the site series stay time-aligned
-    dates = sorted(set.intersection(*[set(df[df["SCATS Number"] == s].Date) for s in sites]))[-n_days:]
-    cols = []
-    for s in sites:
-        d = df[(df["SCATS Number"] == s) & df.Date.isin(dates)].sort_values("Date")
-        v = pd.Series(d[VCOLS].to_numpy(float).ravel()).interpolate(limit_direction="both").to_numpy()
-        cols.append(v)
-    M = np.stack(cols, axis=1)                                    # (time, N)
+def main():
+    ap = argparse.ArgumentParser(description="Hyperparameter tuning (validation split only).")
+    ap.add_argument("--npz", required=True)
+    ap.add_argument("--tag", default="research", help="output sub-folder, e.g. basic / research")
+    ap.add_argument("--models", nargs="+", default=["lstm", "gru", "gnn"], choices=list(LAYOUT))
+    ap.add_argument("--lrs", nargs="+", type=float, default=[5e-4, 1e-3, 5e-3])
+    ap.add_argument("--hidden", nargs="+", type=int, default=[64, 128, 256])
+    ap.add_argument("--layers", nargs="+", type=int, default=[1, 2])
+    ap.add_argument("--batch", type=int, default=64)
+    ap.add_argument("--epochs", type=int, default=8, help="short runs: only a ranking is needed")
+    ap.add_argument("--patience", type=int, default=3)
+    ap.add_argument("--seed", type=int, default=42)
+    a = ap.parse_args()
 
-    # adjacency: Gaussian kernel on haversine distance, symmetric normalisation
-    xy = df.groupby("SCATS Number")[["NB_LATITUDE", "NB_LONGITUDE"]].mean().loc[sites].to_numpy()
-    n = len(sites)
-    D = np.array([[haversine_km(*xy[i], *xy[j]) for j in range(n)] for i in range(n)])
-    A = np.exp(-(D / D[D > 0].mean()) ** 2)
-    A[A < 0.1] = 0
-    dinv = 1 / np.sqrt(A.sum(1))
-    A_hat = A * dinv[:, None] * dinv[None, :]
+    ds, device = load_dataset(a.npz), get_device()
+    out = Path("outputs/logs") / a.tag
+    out.mkdir(parents=True, exist_ok=True)
+    rows, curves = [], {}
 
-    w = sliding_window_view(M, LOOKBACK + 1, axis=0)             # (B, N, T+1)
-    cut = int(len(w) * 0.8)
-    tr, va = w[:cut], w[cut:]
-    scale = tr.max()
-    f = lambda a: (torch.tensor(a[:, :, :-1] / scale, dtype=torch.float32),
-                   torch.tensor(a[:, :, -1] / scale, dtype=torch.float32))
-    return (*f(tr), *f(va), scale), A_hat
+    for name, lr, hidden, layers in itertools.product(a.models, a.lrs, a.hidden, a.layers):
+        run_id = f"{name}_lr{lr}_h{hidden}_l{layers}"
+        print(f"[{run_id}] on {device}")
+        t0 = time.time()
+        model = build_model(name, ds, hidden, layers)
+        hist = fit(model, ds, LAYOUT[name], lr, a.epochs, a.patience, a.batch, a.seed,
+                   device, verbose=False)
+        curves[run_id] = hist
+        rows.append({"model": name, "lr": lr, "hidden": hidden, "layers": layers,
+                     "batch": a.batch, "best_val_rmse": min(e["val_rmse"] for e in hist),
+                     "epochs_run": len(hist), "seconds": round(time.time() - t0, 1)})
+        print(f"    best val RMSE {rows[-1]['best_val_rmse']:.2f} veh/15min")
 
-def load_data(path, n_sites, n_days):
-    df = pd.read_csv(path)
-    sites = sorted(df["SCATS Number"].unique())[:n_sites]
-    tr, va = [], []
-    for s in sites:
-        d = df[df["SCATS Number"] == s].sort_values("Date").tail(n_days)
-        v = pd.Series(d[VCOLS].to_numpy(float).ravel()).interpolate(limit_direction="both").to_numpy()
-        w = sliding_window_view(v, LOOKBACK + 1)
-        cut = int(len(w) * 0.8)                 # chronological split per site
-        tr.append(w[:cut]); va.append(w[cut:])
-    tr, va = np.concatenate(tr), np.concatenate(va)
-    scale = tr.max()
-    f = lambda a: (torch.tensor(a[:, :-1] / scale, dtype=torch.float32).unsqueeze(-1),
-                   torch.tensor(a[:, -1:] / scale, dtype=torch.float32))
-    return *f(tr), *f(va), scale
+    res = pd.DataFrame(rows).sort_values("best_val_rmse")
+    res.to_csv(out / "tuning_results.csv", index=False)
+    (out / "tuning_curves.json").write_text(json.dumps(curves))
+    best = {}
+    for m in a.models:
+        r = res[res.model == m].iloc[0]
+        best[m] = {"lr": float(r.lr), "hidden": int(r.hidden), "layers": int(r.layers),
+                   "batch": int(r.batch)}
+    (out / "best_params.json").write_text(json.dumps(best, indent=2))
+    print("best params:", json.dumps(best, indent=2))
 
-def run(model, lr, data, epochs, dev):
-    Xtr, ytr, Xva, yva, scale = data
-    model = model.to(dev)
-    opt, loss_fn = torch.optim.Adam(model.parameters(), lr=lr), nn.MSELoss()
-    loader = DataLoader(TensorDataset(Xtr, ytr), batch_size=256, shuffle=True)
-    hist = []
-    for ep in range(epochs):
-        model.train(); total = 0.0
-        for xb, yb in loader:
-            xb, yb = xb.to(dev), yb.to(dev)
-            opt.zero_grad(); loss = loss_fn(model(xb), yb); loss.backward(); opt.step()
-            total += loss.item() * len(xb)
-        model.eval()
-        with torch.no_grad():
-            pred = model(Xva.to(dev)).cpu()
-        hist.append({"epoch": ep + 1, "train_loss": total / len(Xtr),
-                     "val_rmse": ((pred - yva) ** 2).mean().sqrt().item() * scale})
-    return hist
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="data/site_totals_15min_2014_2026.csv.gz")
-    ap.add_argument("--sites", type=int, default=10)
-    ap.add_argument("--days", type=int, default=180)
-    ap.add_argument("--epochs", type=int, default=10)
-    a = ap.parse_args()
-    dev = "cuda" if torch.cuda.is_available() else "cpu"
-    LOG_DIR.mkdir(exist_ok=True)
-    rnn_data = load_data(a.data, a.sites, a.days)
-    gnn_data, A_hat = load_graph_data(a.data, a.sites, a.days)
-    rows, curves = [], {}
-    for kind, lr, h in itertools.product(["lstm", "gru", "gnn"], LRS, HIDDEN):
-        t0 = time.time()
-        if kind == "gnn":
-            model, data = GCNNet(A_hat, h), gnn_data
-        else:
-            model, data = RNNNet(kind, h), rnn_data
-        hist = run(model, lr, data, a.epochs, dev)
-        key = f"{kind}_lr{lr}_h{h}"
-        curves[key] = hist
-        rows.append({"model": kind, "lr": lr, "hidden": h, "final_val_rmse": hist[-1]["val_rmse"],
-                     "best_val_rmse": min(e["val_rmse"] for e in hist), "seconds": round(time.time() - t0, 1)})
-        print(rows[-1], flush=True)
-    res = pd.DataFrame(rows).sort_values("best_val_rmse")
-    res.to_csv(LOG_DIR / "tuning_results.csv", index=False)
-    (LOG_DIR / "tuning_curves.json").write_text(json.dumps(curves))
-    best = {m: res[res.model == m].iloc[0][["lr", "hidden"]].to_dict() for m in ["lstm", "gru", "gnn"]}
-    (LOG_DIR / "best_params.json").write_text(json.dumps(best, indent=2))
-    print("best:", best)
+    main()

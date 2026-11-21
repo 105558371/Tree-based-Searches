@@ -1,0 +1,4 @@
+model,lr,hidden,layers,batch,best_val_rmse,epochs_run,seconds
+gru,0.001,32,1,64,89.74079895019531,2,5.3
+lstm,0.001,32,1,64,118.33912658691406,2,7.8
+gnn,0.001,32,1,64,269.0955810546875,2,0.4
