@@ -1,5 +1,5 @@
-"""Clean SCATS lat/long, apply map corrections, and project to GUI coordinates."""
-import json, math
+"""Clean SCATS lat/long, apply map corrections, and prepare for Streamlit."""
+import json
 from pathlib import Path
 import pandas as pd
 
@@ -37,24 +37,9 @@ def flag_outliers(s):
     s["out_of_bounds"] = ~(s.lat.between(la0, la1) & s.lon.between(lo0, lo1))
     return s
 
-def _mercator(lat, lon):
-    x = (lon + 180) / 360
-    y = 0.5 - math.log(math.tan(math.pi / 4 + math.radians(lat) / 2)) / (2 * math.pi)
-    return x, y
-
-def to_canvas(s, width=1000, height=800, pad=40):
-    """Pixel coords for a canvas GUI (Tkinter/PyQt): Web Mercator, aspect-preserving, y down."""
-    xy = [ _mercator(a, b) for a, b in zip(s.lat, s.lon) ]
-    xs, ys = zip(*xy)
-    scale = min((width - 2 * pad) / (max(xs) - min(xs)), (height - 2 * pad) / (max(ys) - min(ys)))
-    s = s.copy()
-    s["x"] = [pad + (x - min(xs)) * scale for x in xs]
-    s["y"] = [pad + (y - min(ys)) * scale for y in ys]
-    return s
-
 if __name__ == "__main__":
-    # s = flag_outliers(apply_corrections(fix_signs(load_sites()), dlat=0.0, dlon=0.0))
+    # Apply corrections and flag any points outside the Boroondara bounding box
     s = flag_outliers(apply_corrections(fix_signs(load_sites()), dlat=0.0015, dlon=0.0013))
-    s = to_canvas(s)
+    # Save to JSON for Streamlit to consume
     s.to_json(OUT, orient="records", indent=2)
     print(f"{len(s)} sites -> {OUT}; out of bounds: {s[s.out_of_bounds].site.tolist()}")
