@@ -1,0 +1,41 @@
+MTGNN | device mps | params 163,444 | windows train 350,580 val 35,136 test 65,757
+epoch  1 | train MAE   40.71 | val MAE   36.41 |    55s
+epoch  2 | train MAE   34.09 | val MAE   33.13 |    53s
+epoch  3 | train MAE   32.50 | val MAE   32.37 |    54s
+epoch  4 | train MAE   31.53 | val MAE   31.49 |    54s
+epoch  5 | train MAE   30.81 | val MAE   30.22 |    54s
+epoch  6 | train MAE   30.23 | val MAE   30.37 |    54s
+epoch  7 | train MAE   30.08 | val MAE   30.63 |    54s
+epoch  8 | train MAE   29.78 | val MAE   29.17 |    54s
+epoch  9 | train MAE   29.53 | val MAE   29.58 |    54s
+epoch 10 | train MAE   29.38 | val MAE   30.06 |    54s
+epoch 11 | train MAE   29.24 | val MAE   28.95 |    54s
+epoch 12 | train MAE   29.01 | val MAE   29.10 |    54s
+epoch 13 | train MAE   28.81 | val MAE   29.70 |    54s
+epoch 14 | train MAE   28.79 | val MAE   29.41 |    54s
+epoch 15 | train MAE   28.73 | val MAE   29.70 |    54s
+epoch 16 | train MAE   28.46 | val MAE   29.74 |    54s
+epoch 17 | train MAE   28.42 | val MAE   29.12 |    54s
+early stop
+{
+  "15min": {
+    "MAE": 26.87,
+    "RMSE": 41.645,
+    "MAPE": 11.17
+  },
+  "30min": {
+    "MAE": 28.721,
+    "RMSE": 45.938,
+    "MAPE": 10.54
+  },
+  "45min": {
+    "MAE": 30.789,
+    "RMSE": 49.681,
+    "MAPE": 11.34
+  },
+  "60min": {
+    "MAE": 33.076,
+    "RMSE": 54.235,
+    "MAPE": 11.9
+  }
+}

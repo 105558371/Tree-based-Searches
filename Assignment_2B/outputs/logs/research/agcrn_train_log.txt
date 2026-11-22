@@ -1,0 +1,53 @@
+AGCRN | device mps | params 749,460 | windows train 350,580 val 35,136 test 65,757
+epoch  1 | train MAE   43.86 | val MAE   36.68 |    92s
+epoch  2 | train MAE   34.61 | val MAE   33.87 |    91s
+epoch  3 | train MAE   32.76 | val MAE   33.15 |    91s
+epoch  4 | train MAE   31.81 | val MAE   32.23 |    91s
+epoch  5 | train MAE   31.11 | val MAE   31.33 |    91s
+epoch  6 | train MAE   30.50 | val MAE   31.74 |    91s
+epoch  7 | train MAE   30.15 | val MAE   32.79 |    91s
+epoch  8 | train MAE   29.76 | val MAE   30.33 |    91s
+epoch  9 | train MAE   29.51 | val MAE   30.50 |    91s
+epoch 10 | train MAE   29.31 | val MAE   29.70 |    91s
+epoch 11 | train MAE   28.99 | val MAE   29.84 |    91s
+epoch 12 | train MAE   28.66 | val MAE   29.77 |    92s
+epoch 13 | train MAE   28.39 | val MAE   28.97 |    91s
+epoch 14 | train MAE   28.20 | val MAE   29.89 |    91s
+epoch 15 | train MAE   28.12 | val MAE   29.79 |    91s
+epoch 16 | train MAE   27.82 | val MAE   28.81 |    92s
+epoch 17 | train MAE   27.70 | val MAE   29.30 |    91s
+epoch 18 | train MAE   27.67 | val MAE   28.91 |    91s
+epoch 19 | train MAE   27.46 | val MAE   28.62 |    92s
+epoch 20 | train MAE   27.36 | val MAE   28.28 |    91s
+epoch 21 | train MAE   27.36 | val MAE   28.25 |    91s
+epoch 22 | train MAE   27.03 | val MAE   28.19 |    91s
+epoch 23 | train MAE   27.03 | val MAE   28.32 |    91s
+epoch 24 | train MAE   27.06 | val MAE   28.54 |    92s
+epoch 25 | train MAE   26.88 | val MAE   28.32 |    91s
+epoch 26 | train MAE   26.90 | val MAE   28.04 |    91s
+epoch 27 | train MAE   26.63 | val MAE   28.38 |    91s
+epoch 28 | train MAE   26.63 | val MAE   28.14 |    91s
+epoch 29 | train MAE   26.64 | val MAE   28.67 |    91s
+epoch 30 | train MAE   26.56 | val MAE   28.51 |    91s
+{
+  "15min": {
+    "MAE": 25.749,
+    "RMSE": 41.202,
+    "MAPE": 9.97
+  },
+  "30min": {
+    "MAE": 27.853,
+    "RMSE": 44.897,
+    "MAPE": 10.52
+  },
+  "45min": {
+    "MAE": 29.923,
+    "RMSE": 48.461,
+    "MAPE": 11.16
+  },
+  "60min": {
+    "MAE": 32.011,
+    "RMSE": 52.314,
+    "MAPE": 11.65
+  }
+}

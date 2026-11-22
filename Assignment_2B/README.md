@@ -15,6 +15,7 @@ Assignment_2B/
 │   └── coord_check.html    # generated map (output of check_map.py)
 ├── data/                   # site-total CSVs + preprocessing scripts (see data/README.md)
 ├── models/                 # model definitions
+├── research/               # 6 spatio-temporal models + comparison (see research/README.md)
 ├── outputs/
 │   ├── logs/               # best_params.json, tuning_curves.json, tuning_results.csv
 │   └── weights/            # saved weights (basic/, research/)

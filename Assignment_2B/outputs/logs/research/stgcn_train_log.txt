@@ -1,0 +1,50 @@
+STGCN | device mps | params 160,388 | windows train 350,580 val 35,136 test 65,757
+epoch  1 | train MAE   44.72 | val MAE   36.14 |    67s
+epoch  2 | train MAE   35.21 | val MAE   32.75 |    68s
+epoch  3 | train MAE   33.43 | val MAE   33.66 |    67s
+epoch  4 | train MAE   32.35 | val MAE   35.18 |    67s
+epoch  5 | train MAE   31.67 | val MAE   31.70 |    67s
+epoch  6 | train MAE   31.11 | val MAE   31.44 |    67s
+epoch  7 | train MAE   30.84 | val MAE   30.45 |    70s
+epoch  8 | train MAE   30.57 | val MAE   30.35 |    67s
+epoch  9 | train MAE   30.21 | val MAE   31.15 |    67s
+epoch 10 | train MAE   30.11 | val MAE   30.93 |    67s
+epoch 11 | train MAE   29.90 | val MAE   30.05 |    67s
+epoch 12 | train MAE   29.66 | val MAE   29.73 |    67s
+epoch 13 | train MAE   29.41 | val MAE   29.37 |    69s
+epoch 14 | train MAE   29.29 | val MAE   29.43 |    69s
+epoch 15 | train MAE   29.28 | val MAE   29.25 |    69s
+epoch 16 | train MAE   28.96 | val MAE   29.20 |    68s
+epoch 17 | train MAE   28.83 | val MAE   29.29 |    67s
+epoch 18 | train MAE   28.95 | val MAE   28.69 |    67s
+epoch 19 | train MAE   28.69 | val MAE   29.21 |    67s
+epoch 20 | train MAE   28.61 | val MAE   28.26 |    67s
+epoch 21 | train MAE   28.58 | val MAE   29.85 |    67s
+epoch 22 | train MAE   28.32 | val MAE   30.15 |    66s
+epoch 23 | train MAE   28.39 | val MAE   29.24 |    67s
+epoch 24 | train MAE   28.48 | val MAE   29.80 |    67s
+epoch 25 | train MAE   28.30 | val MAE   28.76 |    67s
+epoch 26 | train MAE   28.33 | val MAE   30.71 |    67s
+early stop
+{
+  "15min": {
+    "MAE": 26.701,
+    "RMSE": 42.351,
+    "MAPE": 9.98
+  },
+  "30min": {
+    "MAE": 28.768,
+    "RMSE": 46.087,
+    "MAPE": 10.56
+  },
+  "45min": {
+    "MAE": 30.78,
+    "RMSE": 49.683,
+    "MAPE": 11.19
+  },
+  "60min": {
+    "MAE": 32.925,
+    "RMSE": 53.6,
+    "MAPE": 12.02
+  }
+}
