@@ -7,6 +7,7 @@ Output (research/cache/traffic.npz):
     times      [T]    timestamps, 15-minute steps
     sites, lat, lon   [N] SCATS site numbers and coordinates
     adj        [N, N] distance-based adjacency (Gaussian kernel), for graph models
+    ext_*      [T]    calendar and weather features (see external_features.py)
 
 Gap filling: gaps up to 1 hour are linearly interpolated; longer gaps use that
 site's average for the same weekday and time of day (from the training years only).
@@ -14,6 +15,7 @@ site's average for the same weekday and time of day (from the training years onl
 import pathlib
 import numpy as np
 import pandas as pd
+from external_features import build_features
 
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT.parent / "data" / "site_totals_15min_2014_2026.csv.gz"
@@ -62,9 +64,10 @@ def main():
     flow = fill_gaps(wide).to_numpy(np.float32)
     lat, lon = coords.NB_LATITUDE.to_numpy(), coords.NB_LONGITUDE.to_numpy()
     OUT.parent.mkdir(exist_ok=True)
+    ext = {f"ext_{k}": v for k, v in build_features(wide.index).items()}
     np.savez_compressed(OUT, flow=flow, mask=mask, times=wide.index.to_numpy(),
                         sites=wide.columns.to_numpy(), lat=lat, lon=lon,
-                        adj=gaussian_adjacency(lat, lon))
+                        adj=gaussian_adjacency(lat, lon), **ext)
     print(f"{OUT}: {flow.shape[0]} steps x {flow.shape[1]} sites, "
           f"{100 * (1 - mask.mean()):.2f}% filled")
 

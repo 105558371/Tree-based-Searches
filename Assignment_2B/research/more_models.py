@@ -5,7 +5,8 @@ x [batch, 2, nodes, 12] (normalised flow + time of day in [0, 1)) -> [batch, hor
 - STAEformer (Liu et al., 2023)  transformer over time then over sites, with a learned
                                  per-(time step, site) "adaptive embedding"
 
-Day-of-week embeddings from the papers are left out so every model gets the same inputs.
+With --features ext, STAEformer also gets the paper's day-of-week embedding plus a projection
+of the holiday / lockdown / weather channels (x channels 2..7).
 """
 import torch
 import torch.nn as nn
@@ -79,13 +80,18 @@ class SelfAttentionLayer(nn.Module):
 
 class STAEformer(nn.Module):
     def __init__(self, num_nodes, horizon=4, in_steps=12, input_dim=24, tod_dim=24,
-                 adaptive_dim=80, layers=3, heads=4, ff=256, dropout=0.1):
+                 adaptive_dim=80, layers=3, heads=4, ff=256, dropout=0.1, exo_dim=0, dow_dim=24, exo_emb=16):
         super().__init__()
         self.input_proj = nn.Linear(1, input_dim)
         self.tod_emb = nn.Embedding(STEPS_PER_DAY, tod_dim)
+        # optional calendar/weather inputs: channel 2 = day of week / 7, channels 3.. = other features
+        self.exo_dim = exo_dim
+        if exo_dim:
+            self.dow_emb = nn.Embedding(7, dow_dim)
+            self.exo_proj = nn.Linear(exo_dim, exo_emb)
         self.adaptive = nn.Parameter(torch.empty(in_steps, num_nodes, adaptive_dim))
         nn.init.xavier_uniform_(self.adaptive)
-        d = input_dim + tod_dim + adaptive_dim
+        d = input_dim + tod_dim + adaptive_dim + (dow_dim + exo_emb if exo_dim else 0)
         self.temporal = nn.ModuleList(SelfAttentionLayer(d, heads, ff, dropout) for _ in range(layers))
         self.spatial = nn.ModuleList(SelfAttentionLayer(d, heads, ff, dropout) for _ in range(layers))
         self.out = nn.Linear(in_steps * d, horizon)
@@ -94,7 +100,12 @@ class STAEformer(nn.Module):
         b, _, n, t = x.shape
         flow = self.input_proj(x[:, 0].permute(0, 2, 1).unsqueeze(-1))         # [B, T, N, Din]
         tod = self.tod_emb(tod_index(x))[:, :, None, :].expand(-1, -1, n, -1)
-        h = torch.cat([flow, tod, self.adaptive.expand(b, -1, -1, -1)], dim=-1)  # [B, T, N, D]
+        parts = [flow, tod]
+        if self.exo_dim:
+            dow = (x[:, 2, 0, :] * 7).round().long().clamp(0, 6)                 # [B, T]
+            parts.append(self.dow_emb(dow)[:, :, None, :].expand(-1, -1, n, -1))
+            parts.append(self.exo_proj(x[:, 3:3 + self.exo_dim].permute(0, 3, 2, 1)))
+        h = torch.cat(parts + [self.adaptive.expand(b, -1, -1, -1)], dim=-1)  # [B, T, N, D]
         for layer in self.temporal:
             h = layer(h, dim=1)
         for layer in self.spatial:

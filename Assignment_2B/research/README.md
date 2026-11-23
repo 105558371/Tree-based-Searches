@@ -18,11 +18,49 @@ Outputs: `outputs/weights/research/<model>.pt` (best validation epoch), `outputs
 - **Training:** 30 epochs × 60,000 random training windows, Adam lr 1e-3, batch 64,
   early stopping (patience 6), Apple M2 (MPS)
 
+## Training on another PC (Windows / CUDA)
+
+```
+cd Assignment_2B
+pip install torch numpy pandas holidays          # torch with CUDA, see pytorch.org
+python research/prepare_data.py                   # builds research/cache/traffic.npz (~20 s)
+python research/train.py --model staeformer --features ext --epochs 30
+```
+The device is picked automatically (Apple MPS → CUDA → CPU). On a CUDA GPU you can raise
+`--batch-size` (e.g. 128) and `--samples-per-epoch` if it trains fast.
+The weather data is already downloaded (`research/external/`), so no internet is needed.
+
+## External features (`--features ext`)
+
+`external_features.py` adds 6 channels per 15-min step, the same for all sites and all known in advance:
+
+| Feature | Source |
+|---|---|
+| Day of week | from the date |
+| Victorian public holiday | `holidays` package (incl. Melbourne Cup, AFL Grand Final Friday) |
+| School holiday | official Vic term dates 2014–2026 (vic.gov.au/school-term-dates-and-holidays-victoria) |
+| COVID-19 lockdown | Melbourne's six lockdowns, 2020–21 (263 days) |
+| Rain (mm/h), temperature (°C) | Open-Meteo historical API (ERA5), hourly, centre of Boroondara, cached in `external/` |
+
+Rain is log-transformed and both weather values are standardised on the training years.
+STAEformer uses the paper's day-of-week embedding plus a projection of the other 5;
+the graph models take them as extra input channels; STID ignores them.
+Results are saved with an `_ext` suffix, so the base results above stay as they are.
+First 2 epochs on the Mac: val MAE 32.45 vs 32.64 for base STAEformer (run stopped, to be finished on a PC).
+
+## Road graph (`road_graph.py`, work in progress)
+
+Builds road distances and direct road neighbours between the 40 sites from OpenStreetMap
+(for Part A edges and a road-based GNN adjacency). Needs `osmnx scikit-learn`.
+On 23 Nov the public Overpass servers were overloaded, so the CSVs aren't built yet; rerun later.
+
 ## Files
 
 | File | Contents |
 |---|---|
-| `prepare_data.py` | Shared dataset + distance-based adjacency (Gaussian kernel on lat/long) |
+| `prepare_data.py` | Shared dataset + distance-based adjacency (Gaussian kernel on lat/long) + external features |
+| `external_features.py` | Calendar, lockdown and weather features |
+| `road_graph.py` | OpenStreetMap road distances / neighbours between sites (WIP) |
 | `train.py` | Training, evaluation and the model registry |
 | `graph_wavenet.py` | Graph WaveNet |
 | `gnn_models.py` | STGCN, AGCRN, MTGNN |
