@@ -1,0 +1,4 @@
+[
+ {"name": "input_observed_frac", "alignment": "input", "proxy_score": 0.0151},
+ {"name": "steps_since_observed", "alignment": "input", "proxy_score": 0.0062}
+]

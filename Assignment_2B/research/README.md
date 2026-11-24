@@ -48,6 +48,55 @@ the graph models take them as extra input channels; STID ignores them.
 Results are saved with an `_ext` suffix, so the base results above stay as they are.
 First 2 epochs on the Mac: val MAE 32.45 vs 32.64 for base STAEformer (run stopped, to be finished on a PC).
 
+## Best STAEformer: feature engineering (23–24 Nov, RTX 5090)
+
+Recipe: `--features ext+lag+wk4+diff+roll+cyc+event`, 80 epochs, cosine LR schedule, validation on every
+2024 window, 3 seeds averaged. Each seed trains in about 19 min (14 s per epoch).
+
+```
+python research/prepare_data.py
+python research/train.py --model staeformer --features ext+lag+wk4+diff+roll+cyc+event --epochs 80 \
+    --schedule cosine --val-stride 1 --patience 20 --seed 0 --tag final_s0      # repeat for seeds 1 and 2
+python research/ensemble.py staeformer_ext-lag-wk4-diff-roll-cyc-event_final_s0 \
+    staeformer_ext-lag-wk4-diff-roll-cyc-event_final_s1 staeformer_ext-lag-wk4-diff-roll-cyc-event_final_s2 \
+    --name staeformer_ext-lag-wk4-diff-roll-cyc-event_final_ens3
+```
+
+| Test 2025–2026 | MAE | 15 / 30 / 45 / 60 min | RMSE | MAPE |
+|---|---|---|---|---|
+| STAEformer, original (table below) | 28.30 | | 45.76 | 10.61% |
+| + ext, cosine schedule, 3 seeds | 26.41 | | | |
+| **+ best features, 3 seeds (weights in `outputs/weights/research/*_final_s{0,1,2}.pt`)** | **23.49** | 22.50 / 23.27 / 23.82 / 24.38 | **38.37** | **8.86%** |
+| same model, sensor faults excluded from the test labels | 23.36 | | | |
+
+Single seeds: 23.63, 23.67 and 23.60.
+
+Feature groups (`train.py --features`). Each row is a 40-epoch run, validation MAE on 2024 (seed 1;
+seed-to-seed noise about ±0.15):
+
+| Features | Val MAE | Kept |
+|---|---|---|
+| ext (calendar, lockdown, weather) | 25.64 | yes |
+| + lag: same slot last week and yesterday | 24.70 | yes |
+| + wk4: same slot, mean of the last 4 weeks | 24.51 | yes |
+| + diff, roll, cyc: changes, rolling 24 h / 7 d mean and std, sin/cos of time | 24.19 | yes |
+| + event: AFL/cricket at the MCG, Australian Open (`events.py`, `external/mcg_events.csv`) | **23.87** | yes |
+| fill flag, holiday-adjacent days, uni semesters, roadworks (each on ext) | 26.0–26.1 | no |
+| + det: top-8 detector counts per site | 24.19 | no |
+| + nbr: 72 neighbouring intersections as extra nodes (3.4× slower) | 24.17 | no |
+| + llm: features proposed by an LLM feedback loop (`fe_loop.py`) | 23.79 / 24.17 (2 seeds) | no |
+| 6 h input window instead of 3 h | worse | no |
+
+- **events:** they barely change the overall MAE, but on 2024 AFL nights the error at the western sites
+  2.5–4 h after the start falls from 72 to 50.
+- **Where the remaining error comes from:** counting noise accounts for about 80% of the 23.49 (estimated
+  floor of about 19 MAE from the data). A perfect area-wide feature could remove at most 3.7%; a perfect
+  per-day or per-site-day feature at most 0.4%.
+- **Sensor faults** (`clean_faults.py`, `train.py --clean`): 0.56% of values (dead detectors, spikes, stuck
+  values, zero runs). Training on cleaned data didn't help (23.38 vs 23.36 on cleaned labels), so it isn't used.
+- **nbr, det:** need `research/cache/extra.npz`, which `extract_raw.py` + `prepare_extra.py` build from the raw
+  VicRoads archives (about 19 GB, not committed).
+
 ## Road graph (`road_graph.py`, work in progress)
 
 Builds road distances and direct road neighbours between the 40 sites from OpenStreetMap
@@ -65,6 +114,12 @@ On 23 Nov the public Overpass servers were overloaded, so the CSVs aren't built 
 | `graph_wavenet.py` | Graph WaveNet |
 | `gnn_models.py` | STGCN, AGCRN, MTGNN |
 | `more_models.py` | STID, STAEformer |
+| `more_features.py` | Calendar, semester, roadworks and time-series feature builders (lag/wk4/diff/roll/cyc) |
+| `events.py` | MCG / Melbourne Park event history 2014–2026 and the `event` feature |
+| `ensemble.py` | Averages the test predictions of several runs (e.g. 3 seeds) and scores them |
+| `fe_loop.py`, `fe_loop/` | LLM feedback-loop feature search: sandbox, leakage test, LightGBM proxy, results |
+| `extract_raw.py`, `prepare_extra.py` | Neighbour and detector arrays from the raw VicRoads archives (`nbr`, `det`) |
+| `clean_faults.py`, `compare_clean.py` | Sensor-fault detection and the raw vs clean training comparison |
 
 ## Results (test 2025–2026, averaged over the 4 horizons; full table in `outputs/logs/research/comparison.md`)
 

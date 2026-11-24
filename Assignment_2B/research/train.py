@@ -6,13 +6,37 @@ Loss and metrics only count values that were really observed (mask).
 
 --features ext adds day of week, public/school holidays, COVID lockdowns, rain and temperature
 (external_features.py) as extra input channels; results are saved with an "_ext" suffix.
+More groups can be added with "+", e.g. --features ext+lag+fill (saved as "_ext-lag-fill"):
+    lag    flow at the same time last week and yesterday (per site)
+    fill   1 where an input value was gap-filled rather than observed (per site)
+    cal    holiday-adjacent days, bridge days, Christmas week, daylight saving (more_features.py)
+    uni    university semester in session (more_features.py)
+    works  major road/rail construction near the site (per site, more_features.py)
+    wk4, diff, roll, cyc   standard time-series transforms (more_features.py)
+    nbr    neighbouring intersections as extra input nodes (cache/extra.npz from prepare_extra.py;
+           loss and metrics stay on the 40 study sites; not for gwn/stgcn)
+    det    the study sites' top-8 detectors as extra per-site channels (cache/extra.npz)
+    event  AFL / cricket at the MCG and the Australian Open (events.py), aligned with the target
+           slots because fixtures are published in advance (AFL crowd is the actual attendance)
+    llm    features selected by the LLM feedback loop (fe_loop.py; list in fe_loop/selected.json)
 
 Usage: python train.py --model {gwn,stgcn,agcrn,mtgnn,stid,staeformer} [--features {base,ext}] [--epochs 30]
-Writes outputs/weights/research/<model>[_ext].pt and outputs/logs/research/<model>[_ext]_metrics.json.
+Writes outputs/weights/research/<model>[_ext][_tag].pt and outputs/logs/research/<model>[_ext][_tag]_metrics.json.
+
+Optional recipe flags (defaults reproduce the original runs):
+    --schedule cosine   linear warmup (--warmup-epochs) then cosine decay of the LR to 0
+    --val-stride 1      validate on every 2024 window instead of every 8th
+    --in-steps N        history length in 15-min steps (test targets stay the same)
+    --seed, --tag       repeat runs without overwriting each other
+    --clean             treat the sensor faults found by clean_faults.py (cache/fault_mask.npy) as gaps:
+                        excluded from loss and metrics, filled like other gaps in the inputs ("_clean" in the name)
 """
-import argparse, json, pathlib, time
+import argparse, json, math, pathlib, time
 import numpy as np
+import pandas as pd
 import torch
+import events
+import more_features
 from graph_wavenet import GraphWaveNet, transition
 from gnn_models import AGCRN, MTGNN, STGCN
 from more_models import STAEformer, STID
@@ -21,34 +45,112 @@ ROOT = pathlib.Path(__file__).resolve().parent
 WEIGHTS = ROOT.parent / "outputs" / "weights" / "research"
 LOGS = ROOT.parent / "outputs" / "logs" / "research"
 IN_STEPS, HORIZON = 12, 4
+CLEAN = False           # --clean: sensor faults (cache/fault_mask.npy) become gaps
 VAL_START, TEST_START = np.datetime64("2024-01-01"), np.datetime64("2025-01-01")
 
 
 EXT_FLAGS = ["public_holiday", "school_holiday", "lockdown"]
+# --features is "base" or "+"-joined groups, e.g. "ext+lag+fill". Any group beyond ext needs ext,
+# because STAEformer reads day of week from the first ext channel.
+FEATURE_GROUPS = ["ext", "lag", "fill", "cal", "uni", "works", "wk4", "diff", "roll", "cyc", "nbr", "det", "event", "llm"]
+GRAPH_MODELS = {"gwn", "stgcn"}     # use the 40-site distance graph, so they can't take "nbr" nodes
+LAGS = [672, 96]        # same time last week, same time yesterday (15-min steps)
+WEEK = 672
+HISTORY = {"lag": WEEK, "wk4": 4 * WEEK, "diff": WEEK, "roll": WEEK}   # steps of history each group needs
+
+
+def parse_features(features):
+    groups = [] if features == "base" else features.split("+")
+    bad = [g for g in groups if g not in FEATURE_GROUPS]
+    if bad or (groups and groups[0] != "ext"):
+        raise SystemExit(f"--features must be 'base' or 'ext[+group...]' with groups from {FEATURE_GROUPS}")
+    return groups
+
+
+def fill_gaps(wide):
+    """Same rule as prepare_data.fill_gaps: gaps up to 1 h interpolated, longer ones from the site's
+    weekday x time-of-day average over the training years."""
+    filled = wide.interpolate(limit=4, limit_area="inside")
+    train = wide.loc[:VAL_START - np.timedelta64(15, "m")]
+    key = lambda idx: idx.dayofweek * 96 + idx.hour * 4 + idx.minute // 15
+    profile = train.groupby(key(train.index)).mean()
+    return filled.fillna(profile.reindex(key(filled.index)).set_index(filled.index)).fillna(0)
 
 
 def load(device, features="base"):
+    groups = parse_features(features)
     d = np.load(ROOT / "cache" / "traffic.npz", allow_pickle=True)
     flow, mask, times = d["flow"], d["mask"], d["times"].astype("datetime64[m]")
+    if CLEAN:   # sensor faults become gaps: no loss or metric on them, inputs filled as in prepare_data.py
+        mask = mask & ~np.load(ROOT / "cache" / "fault_mask.npy")
+        wide = pd.DataFrame(np.where(mask, flow, np.nan), index=pd.DatetimeIndex(d["times"]))
+        flow = fill_gaps(wide).to_numpy(np.float32)
+    observed, n_study = mask, flow.shape[1]
+    extra = np.load(ROOT / "cache" / "extra.npz") if {"nbr", "det"} & set(groups) else None
+    if "nbr" in groups:
+        # neighbouring intersections become extra input nodes; their targets are masked out,
+        # so loss and metrics still cover only the 40 study sites
+        flow = np.concatenate([flow, extra["nbr_flow"]], axis=1)
+        observed = np.concatenate([mask, extra["nbr_mask"]], axis=1)
+        mask = np.concatenate([mask, np.zeros_like(extra["nbr_mask"])], axis=1)
+    pad = lambda a: np.pad(a, [(0, 0), (0, flow.shape[1] - a.shape[1])])   # study-only array -> all nodes
     train_rows = times < VAL_START
     mean, std = flow[train_rows].mean(0), flow[train_rows].std(0) + 1e-6   # per site
+    std = np.where(std < 1, 1.0, std)                  # guard for nodes with (almost) no training data
     tod = ((times - times.astype("datetime64[D]")).astype(int) / 1440.0).astype(np.float32)
 
-    # window t uses inputs [t-12, t) and targets [t, t+4); split by first target time
-    starts = np.arange(IN_STEPS, len(flow) - HORIZON + 1)
+    # window t uses inputs [t-12, t) and targets [t, t+4); split by first target time.
+    # Windows start once every group has the history it needs, so lagged indices stay >= 0.
+    first = IN_STEPS + max([HISTORY.get(g, 0) for g in groups] + [0])
+    starts = np.arange(first, len(flow) - HORIZON + 1)
     split = {"train": starts[times[starts] < VAL_START],
              "val": starts[(times[starts] >= VAL_START) & (times[starts] < TEST_START)],
              "test": starts[times[starts] >= TEST_START]}
     t = lambda a: torch.as_tensor(a, device=device)
-    data = dict(norm=t(((flow - mean) / std).astype(np.float32)), flow=t(flow), mask=t(mask),
+    norm = ((flow - mean) / std).astype(np.float32)
+    data = dict(norm=t(norm), flow=t(flow), mask=t(mask),
                 tod=t(tod), mean=t(mean.astype(np.float32)), std=t(std.astype(np.float32)))
-    if features == "ext":
+    # per-site channels as (array [T, N], offset): batch() reads array[input step + offset].
+    # Offset HORIZON - lag lines the last 4 input steps up with the 4 target slots one lag earlier.
+    site = []
+    if "lag" in groups:
+        site += [(data["norm"], HORIZON - lag) for lag in LAGS]
+    if "fill" in groups:
+        site.append((t((~observed).astype(np.float32)), 0))   # 1 where the input value was gap-filled
+    if "works" in groups:
+        site.append((t(pad(more_features.works_features(pd.DatetimeIndex(d["times"]), d["sites"]))), 0))
+    if "wk4" in groups:      # same slot averaged over the previous 4 weeks, at the target slots
+        site.append((t(more_features.seasonal_mean(norm, WEEK, 4)), HORIZON))
+    if "diff" in groups:     # change since the previous step, and versus the same time last week
+        site += [(t(more_features.shifted_diff(norm, 1)), 0), (t(more_features.shifted_diff(norm, WEEK)), 0)]
+    if "roll" in groups:     # level and volatility over the past day, level over the past week
+        m24, s24 = more_features.rolling_mean_std(norm, 96)
+        site += [(t(m24), 0), (t(s24), 0), (t(more_features.rolling_mean_std(norm, WEEK)[0]), 0)]
+    if "det" in groups:      # the study sites' top detectors (standardised), 0 for neighbour nodes
+        site += [(t(pad(extra["det"][:, :, k])), 0) for k in range(extra["det"].shape[2])]
+    if "event" in groups:    # MCG / Melbourne Park events are scheduled ahead, so read them at the target slots
+        ev = t(events.event_features(pd.DatetimeIndex(d["times"])))
+        site += [(ev[:, c:c + 1].expand(-1, flow.shape[1]), HORIZON) for c in range(ev.shape[1])]
+    if "llm" in groups:      # features chosen by the LLM feedback loop (fe_loop.py -> fe_loop/selected.json)
+        for f in json.loads((ROOT / "fe_loop" / "selected.json").read_text()):
+            arr = np.load(ROOT / "cache" / "fe_loop" / f"{f['name']}.npy")
+            arr = t(arr[:, None]).expand(-1, flow.shape[1]) if arr.ndim == 1 else t(pad(arr))
+            site.append((arr, 0 if f["alignment"] == "input" else HORIZON))
+    data["site"] = site
+    if "ext" in groups:
         # [T, 6]: dow/7, three 0/1 flags, log rain and temperature standardised on the training years
         rain, temp = np.log1p(d["ext_rain_mm"]), d["ext_temp_c"]
         z = lambda a: (a - a[train_rows].mean()) / a[train_rows].std()
-        exo = np.stack([d["ext_dow"] / 7.0] + [d[f"ext_{k}"].astype(np.float32) for k in EXT_FLAGS]
-                       + [z(rain), z(temp)], axis=1)
-        data["exo"] = t(exo.astype(np.float32))
+        exo = [np.stack([d["ext_dow"] / 7.0] + [d[f"ext_{k}"].astype(np.float32) for k in EXT_FLAGS]
+                        + [z(rain), z(temp)], axis=1)]
+        idx = pd.DatetimeIndex(d["times"])
+        if "cal" in groups:
+            exo.append(more_features.calendar_features(idx, d["ext_public_holiday"]))
+        if "uni" in groups:
+            exo.append(more_features.semester_features(idx))
+        if "cyc" in groups:
+            exo.append(more_features.cyclical_features(idx))
+        data["exo"] = t(np.concatenate(exo, axis=1).astype(np.float32))
     return data, split, torch.as_tensor(d["adj"])
 
 
@@ -71,8 +173,12 @@ def batch(data, idx):
     tod = data["tod"][i_in][..., None].expand_as(x)
     x = torch.stack([x, tod], dim=1).transpose(2, 3)          # [B, 2, N, 12]
     if "exo" in data:                                         # same values for every site
-        e = data["exo"][i_in].permute(0, 2, 1)[:, :, None, :]  # [B, 6, 1, 12]
+        e = data["exo"][i_in].permute(0, 2, 1)[:, :, None, :]  # [B, C, 1, 12]
         x = torch.cat([x, e.expand(-1, -1, x.size(2), -1)], dim=1)
+    # per-site channels, each [B, 12, N]; every index read is still before t (no future data)
+    site = [arr[i_in + off] for arr, off in data.get("site", [])]
+    if site:
+        x = torch.cat([x, torch.stack(site, dim=1).transpose(2, 3)], dim=1)
     return x, data["flow"][i_out], data["mask"][i_out]
 
 
@@ -109,24 +215,44 @@ def evaluate(model, data, windows, device, bs=128):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", choices=MODELS, default="gwn")
-    ap.add_argument("--features", choices=["base", "ext"], default="base")
+    ap.add_argument("--features", default="base", help=f"'base' or 'ext[+group...]', groups: {FEATURE_GROUPS[1:]}")
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--samples-per-epoch", type=int, default=60000)
     ap.add_argument("--batch-size", type=int, default=64)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--patience", type=int, default=6)
+    ap.add_argument("--schedule", choices=["none", "cosine"], default="none")
+    ap.add_argument("--warmup-epochs", type=float, default=1.0)
+    ap.add_argument("--val-stride", type=int, default=8)
+    ap.add_argument("--in-steps", type=int, default=12)
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--tag", default="")
+    ap.add_argument("--clean", action="store_true")
     args = ap.parse_args()
 
-    torch.manual_seed(0); np.random.seed(0)
+    global IN_STEPS, CLEAN
+    IN_STEPS = args.in_steps        # read by load(), batch() and the model builders
+    CLEAN = args.clean
+    torch.manual_seed(args.seed); np.random.seed(args.seed)
     device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
+    if device == "cuda":
+        torch.backends.cuda.matmul.allow_tf32 = True     # TF32 matmuls: ~25% faster on recent NVIDIA GPUs
+    if args.model in GRAPH_MODELS and "nbr" in parse_features(args.features):
+        raise SystemExit(f"{args.model} uses the 40-site distance graph and can't take --features ...+nbr")
     data, split, adj = load(device, args.features)
     name, build = MODELS[args.model]
-    in_dim = 2 + (data["exo"].shape[1] if "exo" in data else 0)
+    in_dim = batch(data, torch.as_tensor(split["train"][:1], device=device))[0].shape[1]
     model = build(data["flow"].shape[1], adj, in_dim).to(device)
-    run = args.model + ("_ext" if args.features == "ext" else "")
+    run = (args.model + ("" if args.features == "base" else "_" + args.features.replace("+", "-"))
+           + ("_clean" if args.clean else "") + (f"_{args.tag}" if args.tag else ""))
     ckpt = WEIGHTS / f"{run}.pt"
     opt = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    val_sub = split["val"][::8]     # every 2 h of 2024, for fast validation
+    steps_per_epoch = math.ceil(args.samples_per_epoch / args.batch_size)
+    total, warmup = args.epochs * steps_per_epoch, max(1.0, args.warmup_epochs * steps_per_epoch)
+    lr_factor = lambda s: (min(1.0, (s + 1) / warmup) * 0.5 * (1 + math.cos(math.pi * min(s, total) / total))
+                           if args.schedule == "cosine" else 1.0)
+    sched = torch.optim.lr_scheduler.LambdaLR(opt, lr_factor)
+    val_sub = split["val"][::args.val_stride]     # default: every 2 h of 2024, for fast validation
     print(f"{name} | features {args.features} | device {device} | params {sum(p.numel() for p in model.parameters()):,} | "
           f"windows train {len(split['train']):,} val {len(split['val']):,} test {len(split['test']):,}")
 
@@ -142,12 +268,13 @@ def main():
             loss = masked_mae(predict(model, data, idx), y, m)
             opt.zero_grad(); loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 5.0)
-            opt.step(); losses.append(loss.item())
+            opt.step(); sched.step(); losses.append(loss.item())
         val = evaluate(model, data, val_sub, device)
         val_mae = np.mean([v["MAE"] for v in val.values()])
-        history.append({"epoch": epoch, "train_mae": float(np.mean(losses)), "val_mae": float(val_mae)})
+        lr_now = opt.param_groups[0]["lr"]
+        history.append({"epoch": epoch, "train_mae": float(np.mean(losses)), "val_mae": float(val_mae), "lr": lr_now})
         print(f"epoch {epoch:2d} | train MAE {np.mean(losses):7.2f} | val MAE {val_mae:7.2f} | "
-              f"{time.time() - t0:5.0f}s", flush=True)
+              f"lr {lr_now:.1e} | {time.time() - t0:5.0f}s", flush=True)
         if val_mae < best:
             best, bad = val_mae, 0
             torch.save(model.state_dict(), ckpt)
