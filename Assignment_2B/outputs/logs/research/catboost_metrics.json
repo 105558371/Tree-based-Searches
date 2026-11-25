@@ -1,0 +1,77 @@
+{
+  "model": "CatBoost",
+  "features": [
+    "last_1",
+    "last_2",
+    "last_3",
+    "last_4",
+    "last_5",
+    "last_6",
+    "last_7",
+    "last_8",
+    "last_9",
+    "last_10",
+    "last_11",
+    "last_12",
+    "diff_1",
+    "diff_4",
+    "roll24",
+    "lastweek_slot",
+    "yesterday_slot",
+    "wk4_slot",
+    "wk4_now",
+    "dev_now",
+    "seasonal_naive",
+    "area_now",
+    "nbr_dev_now",
+    "observed_last",
+    "tod",
+    "dow",
+    "public_holiday",
+    "school_holiday",
+    "lockdown",
+    "rain",
+    "temp",
+    "afl_arrive",
+    "afl_leave",
+    "cricket",
+    "tennis",
+    "site",
+    "horizon"
+  ],
+  "test_2025_2026": {
+    "15min": {
+      "MAE": 23.817,
+      "RMSE": 39.707,
+      "MAPE": 8.84
+    },
+    "30min": {
+      "MAE": 24.794,
+      "RMSE": 41.568,
+      "MAPE": 9.17
+    },
+    "45min": {
+      "MAE": 25.537,
+      "RMSE": 42.994,
+      "MAPE": 9.42
+    },
+    "60min": {
+      "MAE": 26.244,
+      "RMSE": 44.464,
+      "MAPE": 9.63
+    }
+  },
+  "best_iteration": 15125,
+  "train_minutes": 145.4,
+  "train_rows": 6000000,
+  "top_features": [
+    "seasonal_naive",
+    "lastweek_slot",
+    "yesterday_slot",
+    "wk4_slot",
+    "last_1",
+    "tod",
+    "dev_now",
+    "last_2"
+  ]
+}

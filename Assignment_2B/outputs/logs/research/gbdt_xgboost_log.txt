@@ -1,0 +1,3 @@
+features: train 6,000,000 rows, val 1,000,000, test 10,282,310 (all observed test values) | 37 features | 10s
+seasonal naive (wk4 + current deviation)   test MAE 35.804
+XGBoost                                    test MAE 24.989 | 15min 23.74 30min 24.69 45min 25.42 60min 26.10 | RMSE 42.15 | MAPE 9.23% | 8703 trees, 2.1 min | top: seasonal_naive, wk4_slot, lastweek_slot, last_1, public_holiday

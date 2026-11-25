@@ -1,0 +1,44 @@
+[
+ {
+  "name": "day_volume_ratio",
+  "alignment": "input",
+  "hypothesis": "Log ratio of today's cumulative volume since midnight to the same weekday's typical cumulative (previous 4 weeks): a whole-day anomaly the 3 h input window cannot see",
+  "code": "def feature(ctx):\n    raw = ctx[\"raw\"]; T, N = raw.shape; D = ctx[\"STEPS_PER_DAY\"]\n    days = T // D\n    cum = np.cumsum(raw[: days * D].reshape(days, D, N), axis=1)\n    typ = np.zeros_like(cum)\n    for k in range(1, 5):\n        typ[7 * k:] += cum[: -7 * k]\n    ratio = np.log((cum + 20) / (typ / 4 + 20))\n    ratio[:28] = 0\n    out = np.zeros((T, N), dtype=np.float32); out[: days * D] = ratio.reshape(-1, N)\n    return out\n"
+ },
+ {
+  "name": "input_observed_frac",
+  "alignment": "input",
+  "hypothesis": "Share of the last 12 input steps that were really measured (not gap-filled); errors are ~40% higher when inputs were filled",
+  "code": "def feature(ctx):\n    o = ctx[\"observed\"].astype(np.float32); T, N = o.shape\n    c = np.vstack([np.zeros((1, N)), np.cumsum(o, axis=0, dtype=np.float64)])\n    s = np.arange(1, T + 1); lo = np.maximum(s - 12, 0)\n    return ((c[s] - c[lo]) / (s - lo)[:, None]).astype(np.float32)\n"
+ },
+ {
+  "name": "steps_since_observed",
+  "alignment": "input",
+  "hypothesis": "log(1 + steps since this site last had a measured value): long detector outages mean the inputs are profile fills",
+  "code": "def feature(ctx):\n    o = ctx[\"observed\"]; T, N = o.shape\n    idx = np.where(o, np.arange(T)[:, None], -1)\n    last = np.maximum.accumulate(idx, axis=0)\n    gap = np.where(last < 0, T, np.arange(T)[:, None] - last)\n    return np.log1p(np.minimum(gap, 2000)).astype(np.float32)\n"
+ },
+ {
+  "name": "docklands_leave",
+  "alignment": "target",
+  "hypothesis": "AFL crowd leaving Docklands (Marvel Stadium), 2.5-4 h after the start; fans heading to the eastern suburbs pass Victoria St / Barkers Rd",
+  "code": "def feature(ctx):\n    t = ctx[\"times\"]; ev = ctx[\"events\"]; ev = ev[ev.kind == \"afl_docklands\"]\n    out = np.zeros(len(t), dtype=np.float32)\n    a = t.searchsorted(ev.start + pd.Timedelta(hours=2.5)); b = t.searchsorted(ev.start + pd.Timedelta(hours=4))\n    for i, j, c in zip(a, b, ev.crowd.to_numpy()):\n        out[i:j] = np.maximum(out[i:j], c / 1e5)\n    return out\n"
+ },
+ {
+  "name": "docklands_arrive",
+  "alignment": "target",
+  "hypothesis": "AFL crowd travelling to Docklands, 2 h before the start",
+  "code": "def feature(ctx):\n    t = ctx[\"times\"]; ev = ctx[\"events\"]; ev = ev[ev.kind == \"afl_docklands\"]\n    out = np.zeros(len(t), dtype=np.float32)\n    a = t.searchsorted(ev.start + pd.Timedelta(hours=-2)); b = t.searchsorted(ev.start + pd.Timedelta(hours=0))\n    for i, j, c in zip(a, b, ev.crowd.to_numpy()):\n        out[i:j] = np.maximum(out[i:j], c / 1e5)\n    return out\n"
+ },
+ {
+  "name": "rain_3h",
+  "alignment": "input",
+  "hypothesis": "log(1 + rain over the last 3 hours): accumulated rain rather than the current hourly value",
+  "code": "def feature(ctx):\n    r = ctx[\"rain_mm\"].astype(np.float64); T = len(r)\n    c = np.r_[0.0, np.cumsum(r)]\n    s = np.arange(1, T + 1); lo = np.maximum(s - 12, 0)\n    return np.log1p((c[s] - c[lo]) / 4).astype(np.float32)\n"
+ },
+ {
+  "name": "level_shift",
+  "alignment": "input",
+  "hypothesis": "Log ratio of the last 7 days' mean volume to the 4 weeks before: sustained shifts (roadworks, detector changes, new normal) that slow-moving profiles lag behind",
+  "code": "def feature(ctx):\n    raw = ctx[\"raw\"]; T, N = raw.shape; W = ctx[\"WEEK\"]\n    c = np.vstack([np.zeros((1, N)), np.cumsum(raw, axis=0, dtype=np.float64)])\n    s = np.arange(1, T + 1)\n    def win(a, b):\n        lo = np.clip(s - b, 0, T); hi = np.clip(s - a, 0, T)\n        return (c[hi] - c[lo]) / np.maximum(hi - lo, 1)[:, None]\n    out = np.log((win(0, W) + 10) / (win(W, 5 * W) + 10)); out[: 5 * W] = 0\n    return out.astype(np.float32)\n"
+ }
+]

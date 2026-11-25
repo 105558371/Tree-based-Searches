@@ -1,0 +1,103 @@
+STAEformer | features ext+lag+wk4+diff+roll+cyc+event | device cuda | params 1,253,452 | windows train 347,892 val 35,136 test 65,757
+epoch  1 | train MAE   54.12 | val MAE   38.06 | lr 1.0e-03 |    14s
+epoch  2 | train MAE   34.91 | val MAE   36.23 | lr 1.0e-03 |    14s
+epoch  3 | train MAE   29.50 | val MAE   26.95 | lr 1.0e-03 |    14s
+epoch  4 | train MAE   27.69 | val MAE   26.16 | lr 9.9e-04 |    14s
+epoch  5 | train MAE   26.83 | val MAE   26.04 | lr 9.9e-04 |    14s
+epoch  6 | train MAE   26.29 | val MAE   25.78 | lr 9.9e-04 |    14s
+epoch  7 | train MAE   25.82 | val MAE   25.26 | lr 9.8e-04 |    14s
+epoch  8 | train MAE   25.57 | val MAE   25.37 | lr 9.8e-04 |    14s
+epoch  9 | train MAE   25.44 | val MAE   25.16 | lr 9.7e-04 |    14s
+epoch 10 | train MAE   25.27 | val MAE   24.87 | lr 9.6e-04 |    14s
+epoch 11 | train MAE   25.08 | val MAE   25.03 | lr 9.5e-04 |    14s
+epoch 12 | train MAE   25.04 | val MAE   25.22 | lr 9.5e-04 |    14s
+epoch 13 | train MAE   24.92 | val MAE   25.23 | lr 9.4e-04 |    14s
+epoch 14 | train MAE   24.82 | val MAE   25.01 | lr 9.3e-04 |    14s
+epoch 15 | train MAE   24.73 | val MAE   24.87 | lr 9.2e-04 |    14s
+epoch 16 | train MAE   24.63 | val MAE   25.01 | lr 9.0e-04 |    14s
+epoch 17 | train MAE   24.58 | val MAE   24.66 | lr 8.9e-04 |    14s
+epoch 18 | train MAE   24.56 | val MAE   24.73 | lr 8.8e-04 |    14s
+epoch 19 | train MAE   24.49 | val MAE   24.45 | lr 8.7e-04 |    14s
+epoch 20 | train MAE   24.46 | val MAE   24.68 | lr 8.5e-04 |    14s
+epoch 21 | train MAE   24.40 | val MAE   24.76 | lr 8.4e-04 |    14s
+epoch 22 | train MAE   24.40 | val MAE   24.71 | lr 8.2e-04 |    14s
+epoch 23 | train MAE   24.29 | val MAE   24.39 | lr 8.1e-04 |    14s
+epoch 24 | train MAE   24.30 | val MAE   24.39 | lr 7.9e-04 |    14s
+epoch 25 | train MAE   24.26 | val MAE   24.34 | lr 7.8e-04 |    14s
+epoch 26 | train MAE   24.22 | val MAE   24.66 | lr 7.6e-04 |    14s
+epoch 27 | train MAE   24.23 | val MAE   24.35 | lr 7.4e-04 |    14s
+epoch 28 | train MAE   24.15 | val MAE   24.52 | lr 7.3e-04 |    14s
+epoch 29 | train MAE   24.14 | val MAE   24.20 | lr 7.1e-04 |    14s
+epoch 30 | train MAE   24.07 | val MAE   24.20 | lr 6.9e-04 |    14s
+epoch 31 | train MAE   24.07 | val MAE   24.23 | lr 6.7e-04 |    14s
+epoch 32 | train MAE   23.95 | val MAE   24.32 | lr 6.5e-04 |    14s
+epoch 33 | train MAE   23.99 | val MAE   24.29 | lr 6.4e-04 |    14s
+epoch 34 | train MAE   23.99 | val MAE   24.62 | lr 6.2e-04 |    14s
+epoch 35 | train MAE   23.89 | val MAE   24.25 | lr 6.0e-04 |    14s
+epoch 36 | train MAE   23.98 | val MAE   24.03 | lr 5.8e-04 |    14s
+epoch 37 | train MAE   23.87 | val MAE   24.15 | lr 5.6e-04 |    14s
+epoch 38 | train MAE   23.94 | val MAE   24.08 | lr 5.4e-04 |    14s
+epoch 39 | train MAE   23.96 | val MAE   24.08 | lr 5.2e-04 |    14s
+epoch 40 | train MAE   23.78 | val MAE   24.11 | lr 5.0e-04 |    14s
+epoch 41 | train MAE   23.85 | val MAE   24.07 | lr 4.8e-04 |    14s
+epoch 42 | train MAE   23.79 | val MAE   24.07 | lr 4.6e-04 |    14s
+epoch 43 | train MAE   23.76 | val MAE   24.14 | lr 4.4e-04 |    14s
+epoch 44 | train MAE   23.78 | val MAE   24.00 | lr 4.2e-04 |    14s
+epoch 45 | train MAE   23.69 | val MAE   24.13 | lr 4.0e-04 |    14s
+epoch 46 | train MAE   23.69 | val MAE   23.98 | lr 3.8e-04 |    14s
+epoch 47 | train MAE   23.71 | val MAE   23.94 | lr 3.6e-04 |    14s
+epoch 48 | train MAE   23.65 | val MAE   23.92 | lr 3.5e-04 |    14s
+epoch 49 | train MAE   23.70 | val MAE   23.93 | lr 3.3e-04 |    14s
+epoch 50 | train MAE   23.66 | val MAE   23.88 | lr 3.1e-04 |    14s
+epoch 51 | train MAE   23.59 | val MAE   24.02 | lr 2.9e-04 |    14s
+epoch 52 | train MAE   23.57 | val MAE   23.94 | lr 2.7e-04 |    14s
+epoch 53 | train MAE   23.57 | val MAE   23.93 | lr 2.6e-04 |    14s
+epoch 54 | train MAE   23.63 | val MAE   23.91 | lr 2.4e-04 |    14s
+epoch 55 | train MAE   23.52 | val MAE   23.87 | lr 2.2e-04 |    14s
+epoch 56 | train MAE   23.59 | val MAE   23.84 | lr 2.1e-04 |    14s
+epoch 57 | train MAE   23.48 | val MAE   23.83 | lr 1.9e-04 |    14s
+epoch 58 | train MAE   23.50 | val MAE   23.80 | lr 1.8e-04 |    14s
+epoch 59 | train MAE   23.48 | val MAE   23.81 | lr 1.6e-04 |    14s
+epoch 60 | train MAE   23.42 | val MAE   23.86 | lr 1.5e-04 |    14s
+epoch 61 | train MAE   23.43 | val MAE   23.79 | lr 1.3e-04 |    14s
+epoch 62 | train MAE   23.40 | val MAE   23.79 | lr 1.2e-04 |    14s
+epoch 63 | train MAE   23.43 | val MAE   23.77 | lr 1.1e-04 |    14s
+epoch 64 | train MAE   23.38 | val MAE   23.76 | lr 9.5e-05 |    14s
+epoch 65 | train MAE   23.45 | val MAE   23.80 | lr 8.4e-05 |    14s
+epoch 66 | train MAE   23.36 | val MAE   23.75 | lr 7.4e-05 |    14s
+epoch 67 | train MAE   23.37 | val MAE   23.78 | lr 6.4e-05 |    14s
+epoch 68 | train MAE   23.38 | val MAE   23.75 | lr 5.4e-05 |    14s
+epoch 69 | train MAE   23.35 | val MAE   23.72 | lr 4.6e-05 |    14s
+epoch 70 | train MAE   23.36 | val MAE   23.72 | lr 3.8e-05 |    14s
+epoch 71 | train MAE   23.36 | val MAE   23.71 | lr 3.1e-05 |    14s
+epoch 72 | train MAE   23.34 | val MAE   23.73 | lr 2.4e-05 |    14s
+epoch 73 | train MAE   23.33 | val MAE   23.71 | lr 1.9e-05 |    14s
+epoch 74 | train MAE   23.33 | val MAE   23.72 | lr 1.4e-05 |    14s
+epoch 75 | train MAE   23.28 | val MAE   23.72 | lr 9.6e-06 |    14s
+epoch 76 | train MAE   23.24 | val MAE   23.72 | lr 6.2e-06 |    14s
+epoch 77 | train MAE   23.27 | val MAE   23.71 | lr 3.5e-06 |    14s
+epoch 78 | train MAE   23.29 | val MAE   23.71 | lr 1.5e-06 |    14s
+epoch 79 | train MAE   23.30 | val MAE   23.71 | lr 3.9e-07 |    14s
+epoch 80 | train MAE   23.27 | val MAE   23.71 | lr 0.0e+00 |    14s
+{
+  "15min": {
+    "MAE": 22.642,
+    "RMSE": 36.369,
+    "MAPE": 8.59
+  },
+  "30min": {
+    "MAE": 23.435,
+    "RMSE": 38.181,
+    "MAPE": 8.86
+  },
+  "45min": {
+    "MAE": 24.007,
+    "RMSE": 39.495,
+    "MAPE": 9.06
+  },
+  "60min": {
+    "MAE": 24.598,
+    "RMSE": 40.812,
+    "MAPE": 9.24
+  }
+}

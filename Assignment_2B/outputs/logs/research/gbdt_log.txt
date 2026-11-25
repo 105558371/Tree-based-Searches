@@ -1,0 +1,12 @@
+features: train 6,000,000 rows, val 1,000,000, test 10,282,310 (all observed test values) | 37 features | 6s
+seasonal naive (wk4 + current deviation)   test MAE 35.804
+LightGBM                                   test MAE 24.834 | 15min 23.61 30min 24.56 45min 25.26 60min 25.91 | RMSE 41.55 | MAPE 9.21% | 4998 trees, 11.2 min | top: site, temp, yesterday_slot, lastweek_slot, tod
+Potential solutions:
+- Use a data structure that matches the device ordinal in the booster.
+- Set the device for booster before call to inplace_predict.
+
+
+  return func(**kwargs)
+XGBoost                                    test MAE 24.996 | 15min 23.74 30min 24.70 45min 25.43 60min 26.11 | RMSE 42.18 | MAPE 9.23% | 4997 trees, 1.2 min | top: seasonal_naive, wk4_slot, lastweek_slot, last_1, public_holiday
+Default metric period is 5 because MAE is/are not implemented for GPU
+CatBoost                                   test MAE 104.309 | 15min 102.93 30min 103.83 45min 104.76 60min 105.71 | RMSE 257.06 | MAPE 62.50% | 4999 trees, 2.2 min | top: seasonal_naive, wk4_slot, lastweek_slot, yesterday_slot, last_2

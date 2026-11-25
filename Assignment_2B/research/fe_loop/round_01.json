@@ -1,0 +1,38 @@
+[
+ {
+  "name": "analog_week",
+  "alignment": "target",
+  "hypothesis": "Same slot last week scaled by how today's latest hour compares with the same hour last week (multiplicative level adjustment the linear input projection cannot form)",
+  "code": "def feature(ctx):\n    raw = ctx[\"raw\"]; T, N = raw.shape; L = 672\n    c = np.vstack([np.zeros((1, N)), np.cumsum(raw, axis=0, dtype=np.float64)])\n    def hour_mean(end):                     # mean of rows end-3..end\n        lo = np.clip(end - 3, 0, T); hi = np.clip(end + 1, 0, T)\n        return (c[hi] - c[lo]) / np.maximum(hi - lo, 1)[:, None]\n    s = np.arange(T)\n    now = hour_mean(s - 4)                  # latest hour known for every target slot\n    then = hour_mean(s - 4 - L)\n    ratio = np.clip((now + 5) / (then + 5), 0.5, 2.0)\n    est = raw[np.clip(s - L, 0, T - 1)] * ratio\n    tr = ctx[\"train_rows\"]; mu = raw[tr].mean(0); sd = raw[tr].std(0) + 1e-6\n    out = (est - mu) / sd\n    out[: L + 8] = 0\n    return out.astype(np.float32)\n"
+ },
+ {
+  "name": "analog_day",
+  "alignment": "target",
+  "hypothesis": "Same slot yesterday scaled by today's latest hour vs yesterday's same hour",
+  "code": "def feature(ctx):\n    raw = ctx[\"raw\"]; T, N = raw.shape; L = 96\n    c = np.vstack([np.zeros((1, N)), np.cumsum(raw, axis=0, dtype=np.float64)])\n    def hour_mean(end):                     # mean of rows end-3..end\n        lo = np.clip(end - 3, 0, T); hi = np.clip(end + 1, 0, T)\n        return (c[hi] - c[lo]) / np.maximum(hi - lo, 1)[:, None]\n    s = np.arange(T)\n    now = hour_mean(s - 4)                  # latest hour known for every target slot\n    then = hour_mean(s - 4 - L)\n    ratio = np.clip((now + 5) / (then + 5), 0.5, 2.0)\n    est = raw[np.clip(s - L, 0, T - 1)] * ratio\n    tr = ctx[\"train_rows\"]; mu = raw[tr].mean(0); sd = raw[tr].std(0) + 1e-6\n    out = (est - mu) / sd\n    out[: L + 8] = 0\n    return out.astype(np.float32)\n"
+ },
+ {
+  "name": "lag_regime_mismatch",
+  "alignment": "target",
+  "hypothesis": "Calendar regime (public/school holiday) at the target slot differs from one week earlier, so the weekly lag is misleading; signed: +2/-2 public holiday, +1/-1 school holiday",
+  "code": "def feature(ctx):\n    W = ctx[\"WEEK\"]\n    ph = ctx[\"public_holiday\"].astype(np.int8); sh = ctx[\"school_holiday\"].astype(np.int8)\n    ph_prev = np.r_[np.zeros(W, np.int8), ph[:-W]]; sh_prev = np.r_[np.zeros(W, np.int8), sh[:-W]]\n    return ((ph - ph_prev) * 2 + (sh - sh_prev)).astype(np.float32)\n"
+ },
+ {
+  "name": "regime_matched_lastweek",
+  "alignment": "target",
+  "hypothesis": "Same slot from the most recent week (1-4 back) whose public/school-holiday status matches the target day, instead of blindly last week",
+  "code": "def feature(ctx):\n    f = ctx[\"flow\"]; T, N = f.shape; W = ctx[\"WEEK\"]\n    regime = ctx[\"public_holiday\"].astype(np.int8) * 2 + ctx[\"school_holiday\"].astype(np.int8)\n    s = np.arange(T)\n    k = np.ones(T, dtype=np.int64); found = np.zeros(T, dtype=bool)\n    for kk in range(1, 5):\n        match = regime[np.clip(s - kk * W, 0, T - 1)] == regime\n        take = match & ~found\n        k[take] = kk; found |= take\n    out = f[np.clip(s - k * W, 0, T - 1)]\n    out[: 4 * W] = 0\n    return out.astype(np.float32)\n"
+ },
+ {
+  "name": "median_8w",
+  "alignment": "target",
+  "hypothesis": "Median of the same slot over the previous 8 weeks: a robust typical level that ignores one-off anomalies (the 4-week mean does not)",
+  "code": "def feature(ctx):\n    f = ctx[\"flow\"]; T, N = f.shape; W = ctx[\"WEEK\"]\n    stack = np.full((8, T, N), np.nan, dtype=np.float32)\n    for k in range(1, 9):\n        stack[k - 1, k * W:] = f[:-k * W]\n    return np.nan_to_num(np.nanmedian(stack, axis=0)).astype(np.float32)\n"
+ },
+ {
+  "name": "neighbor_anomaly",
+  "alignment": "input",
+  "hypothesis": "Distance-weighted mean of other sites' deviation from last week over the last hour: an area-wide disruption signal (incident, weather, event) that a single site's history misses",
+  "code": "def feature(ctx):\n    f = ctx[\"flow\"]; T, N = f.shape; W = ctx[\"WEEK\"]\n    anom = np.zeros_like(f); anom[W:] = f[W:] - f[:-W]\n    c = np.vstack([np.zeros((1, N)), np.cumsum(anom, axis=0, dtype=np.float64)])\n    s = np.arange(1, T + 1); lo = np.maximum(s - 4, 0)\n    sm = (c[s] - c[lo]) / (s - lo)[:, None]\n    d = ctx[\"dist_km\"].astype(np.float64).copy(); np.fill_diagonal(d, np.inf)\n    w = 1.0 / (d + 0.5); w = w / w.sum(1, keepdims=True)\n    return (sm @ w.T).astype(np.float32)\n"
+ }
+]
