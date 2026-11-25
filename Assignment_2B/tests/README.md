@@ -1,4 +1,4 @@
-# Assignment 2B test execution report
+# Assignment 2B test execution report (with test result for reference)
 
 On 26 November 2026, pytest collected 19 checks across exactly 16 new scenario files. **18 passed, 0 failed and 1 skipped.** Every scenario file had at least one passing check. TC11's real route could not run because neither configured location contains the directed road graph. The protected Assignment 2A runner separately passed 182 of 182 checks.
 
