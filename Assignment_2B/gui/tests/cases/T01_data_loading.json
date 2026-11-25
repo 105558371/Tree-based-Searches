@@ -1,0 +1,8 @@
+{
+  "id": "T01",
+  "area": "Data",
+  "scenario": "Load the dataset",
+  "expected": "Every site has 96 intervals per day (24 h x 4); no unreadable rows",
+  "check": "t01",
+  "needs": "dataset"
+}

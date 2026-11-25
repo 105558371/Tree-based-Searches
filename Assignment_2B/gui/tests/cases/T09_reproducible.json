@@ -1,0 +1,8 @@
+{
+  "id": "T09",
+  "area": "Model",
+  "scenario": "Train twice with the same random seed",
+  "expected": "Both runs give the same loss history",
+  "check": "t09",
+  "needs": "torch"
+}

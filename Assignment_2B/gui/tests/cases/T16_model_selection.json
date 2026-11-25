@@ -1,0 +1,8 @@
+{
+  "id": "T16",
+  "area": "GUI",
+  "scenario": "Select each model in turn",
+  "expected": "Each model runs without error and returns routes",
+  "check": "t16",
+  "needs": "none"
+}

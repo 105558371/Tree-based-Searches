@@ -1,0 +1,8 @@
+{
+  "id": "T17",
+  "area": "GUI",
+  "scenario": "Missing config.json and invalid config.json",
+  "expected": "Built-in defaults are used; a warning is set for an invalid file",
+  "check": "t17",
+  "needs": "none"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "T15",
+  "area": "Route",
+  "scenario": "Number of routes k = 1 and k = 5; k = 0 and k = 6",
+  "expected": "k = 1 and 5 return up to k routes; 0 and 6 are rejected",
+  "check": "t15",
+  "needs": "none"
+}

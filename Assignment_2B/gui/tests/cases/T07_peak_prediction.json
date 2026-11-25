@@ -1,0 +1,8 @@
+{
+  "id": "T07",
+  "area": "Model",
+  "scenario": "Predict flow at a peak hour (08:00 on the last day)",
+  "expected": "Prediction is non-negative and within the observed range of the site",
+  "check": "t07",
+  "needs": "models"
+}

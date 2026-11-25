@@ -1,0 +1,8 @@
+{
+  "id": "T11",
+  "area": "Route",
+  "scenario": "Same pair at peak (08:00) and at off-peak (03:00)",
+  "expected": "Fastest route time at peak is not lower than at off-peak",
+  "check": "t11",
+  "needs": "none"
+}

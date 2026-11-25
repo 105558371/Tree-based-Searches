@@ -1,0 +1,8 @@
+{
+  "id": "T13",
+  "area": "Route",
+  "scenario": "Origin or destination not in the SCATS list (9999)",
+  "expected": "Rejected with a clear message; no crash",
+  "check": "t13",
+  "needs": "none"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "T05",
+  "area": "Model",
+  "scenario": "Train GRU on the same subset",
+  "expected": "Training finishes; final training loss is lower than the first epoch",
+  "check": "t05",
+  "needs": "torch"
+}

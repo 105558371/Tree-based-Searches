@@ -1,0 +1,8 @@
+{
+  "id": "T02",
+  "area": "Data",
+  "scenario": "Build windows of length L from one site",
+  "expected": "Number of samples equals the series length minus L; no target falls before the split boundary",
+  "check": "t02",
+  "needs": "none"
+}

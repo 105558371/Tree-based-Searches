@@ -1,0 +1,8 @@
+{
+  "id": "T12",
+  "area": "Route",
+  "scenario": "Origin equals destination",
+  "expected": "Rejected with a clear message; no crash",
+  "check": "t12",
+  "needs": "none"
+}

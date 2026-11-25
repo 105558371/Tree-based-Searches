@@ -1,0 +1,8 @@
+{
+  "id": "T04",
+  "area": "Model",
+  "scenario": "Train LSTM on a small subset",
+  "expected": "Training finishes; final training loss is lower than the first epoch",
+  "check": "t04",
+  "needs": "torch"
+}

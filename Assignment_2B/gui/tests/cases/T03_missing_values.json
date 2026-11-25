@@ -1,0 +1,8 @@
+{
+  "id": "T03",
+  "area": "Data",
+  "scenario": "Series with missing or negative flow values",
+  "expected": "Values are handled as designed; no NaN reaches the model",
+  "check": "t03",
+  "needs": "none"
+}

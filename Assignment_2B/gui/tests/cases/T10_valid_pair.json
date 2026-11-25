@@ -1,0 +1,8 @@
+{
+  "id": "T10",
+  "area": "Route",
+  "scenario": "Valid pair O = 2000, D = 3002",
+  "expected": "1 to 5 routes, each starting at O and ending at D, sorted by travel time",
+  "check": "t10",
+  "needs": "none"
+}

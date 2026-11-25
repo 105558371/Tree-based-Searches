@@ -1,0 +1,8 @@
+{
+  "id": "T14",
+  "area": "Route",
+  "scenario": "Pair with no connecting path",
+  "expected": "Empty result (the GUI shows 'no route found'); no crash",
+  "check": "t14",
+  "needs": "none"
+}
