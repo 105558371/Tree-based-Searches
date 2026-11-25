@@ -16,7 +16,9 @@ def member_predictions(run, device, cache):
     features = args.get("features", "base")
     train.IN_STEPS = args.get("in_steps", 12)          # read by batch() and the model builders
     train.CLEAN = args.get("clean", False)             # read by load()
-    key = (features, train.CLEAN)
+    train.MODEL_HP = train.parse_hp(args.get("hp", ""))   # read by the STAEformer builder
+    train.TSF_COLS = args.get("tsf_cols", "")          # read by load()
+    key = (features, train.CLEAN, train.TSF_COLS)      # the test windows don't depend on --train-end
     if key not in cache:
         cache[key] = train.load(device, features)
     data, split, adj = cache[key]

@@ -1,0 +1,104 @@
+fold 4/5: held out 2024-04-26T00:00 -> 2026-11-16T23:00
+STAEformer | features ext+lag+wk4+diff+roll+cyc+event | device cuda | params 1,253,452 | windows train 359,025 val 89,757 test 65,757 | K-fold: last epoch kept
+epoch  1 | train MAE   53.22 | val MAE   43.54 | lr 1.0e-03 |    14s
+epoch  2 | train MAE   34.29 | val MAE   28.23 | lr 1.0e-03 |    14s
+epoch  3 | train MAE   29.69 | val MAE   28.10 | lr 1.0e-03 |    14s
+epoch  4 | train MAE   28.01 | val MAE   27.61 | lr 9.9e-04 |    14s
+epoch  5 | train MAE   26.96 | val MAE   27.32 | lr 9.9e-04 |    14s
+epoch  6 | train MAE   26.29 | val MAE   25.12 | lr 9.9e-04 |    14s
+epoch  7 | train MAE   25.89 | val MAE   25.54 | lr 9.8e-04 |    14s
+epoch  8 | train MAE   25.64 | val MAE   25.46 | lr 9.8e-04 |    14s
+epoch  9 | train MAE   25.52 | val MAE   25.02 | lr 9.7e-04 |    14s
+epoch 10 | train MAE   25.26 | val MAE   25.59 | lr 9.6e-04 |    14s
+epoch 11 | train MAE   25.22 | val MAE   24.76 | lr 9.5e-04 |    14s
+epoch 12 | train MAE   25.12 | val MAE   24.75 | lr 9.5e-04 |    14s
+epoch 13 | train MAE   25.02 | val MAE   24.61 | lr 9.4e-04 |    14s
+epoch 14 | train MAE   24.83 | val MAE   24.46 | lr 9.3e-04 |    14s
+epoch 15 | train MAE   24.84 | val MAE   24.70 | lr 9.2e-04 |    14s
+epoch 16 | train MAE   24.77 | val MAE   24.76 | lr 9.0e-04 |    14s
+epoch 17 | train MAE   24.60 | val MAE   24.07 | lr 8.9e-04 |    14s
+epoch 18 | train MAE   24.63 | val MAE   24.11 | lr 8.8e-04 |    14s
+epoch 19 | train MAE   24.53 | val MAE   24.20 | lr 8.7e-04 |    14s
+epoch 20 | train MAE   24.44 | val MAE   24.48 | lr 8.5e-04 |    14s
+epoch 21 | train MAE   24.48 | val MAE   25.10 | lr 8.4e-04 |    14s
+epoch 22 | train MAE   24.44 | val MAE   24.07 | lr 8.2e-04 |    14s
+epoch 23 | train MAE   24.34 | val MAE   24.06 | lr 8.1e-04 |    14s
+epoch 24 | train MAE   24.32 | val MAE   24.11 | lr 7.9e-04 |    14s
+epoch 25 | train MAE   24.38 | val MAE   24.15 | lr 7.8e-04 |    14s
+epoch 26 | train MAE   24.23 | val MAE   23.95 | lr 7.6e-04 |    14s
+epoch 27 | train MAE   24.23 | val MAE   24.01 | lr 7.4e-04 |    14s
+epoch 28 | train MAE   24.20 | val MAE   23.87 | lr 7.3e-04 |    14s
+epoch 29 | train MAE   24.14 | val MAE   24.00 | lr 7.1e-04 |    14s
+epoch 30 | train MAE   24.04 | val MAE   23.85 | lr 6.9e-04 |    14s
+epoch 31 | train MAE   24.13 | val MAE   24.27 | lr 6.7e-04 |    14s
+epoch 32 | train MAE   24.11 | val MAE   23.89 | lr 6.5e-04 |    14s
+epoch 33 | train MAE   24.05 | val MAE   24.04 | lr 6.4e-04 |    14s
+epoch 34 | train MAE   24.02 | val MAE   23.94 | lr 6.2e-04 |    14s
+epoch 35 | train MAE   23.96 | val MAE   23.82 | lr 6.0e-04 |    14s
+epoch 36 | train MAE   24.00 | val MAE   23.79 | lr 5.8e-04 |    14s
+epoch 37 | train MAE   23.92 | val MAE   23.72 | lr 5.6e-04 |    14s
+epoch 38 | train MAE   23.89 | val MAE   23.72 | lr 5.4e-04 |    14s
+epoch 39 | train MAE   23.90 | val MAE   23.92 | lr 5.2e-04 |    14s
+epoch 40 | train MAE   23.88 | val MAE   23.78 | lr 5.0e-04 |    14s
+epoch 41 | train MAE   23.82 | val MAE   23.85 | lr 4.8e-04 |    14s
+epoch 42 | train MAE   23.84 | val MAE   23.59 | lr 4.6e-04 |    14s
+epoch 43 | train MAE   23.77 | val MAE   23.65 | lr 4.4e-04 |    14s
+epoch 44 | train MAE   23.62 | val MAE   23.72 | lr 4.2e-04 |    14s
+epoch 45 | train MAE   23.81 | val MAE   23.70 | lr 4.0e-04 |    14s
+epoch 46 | train MAE   23.68 | val MAE   23.66 | lr 3.8e-04 |    14s
+epoch 47 | train MAE   23.67 | val MAE   23.75 | lr 3.6e-04 |    14s
+epoch 48 | train MAE   23.71 | val MAE   23.55 | lr 3.5e-04 |    14s
+epoch 49 | train MAE   23.62 | val MAE   23.66 | lr 3.3e-04 |    14s
+epoch 50 | train MAE   23.63 | val MAE   23.61 | lr 3.1e-04 |    14s
+epoch 51 | train MAE   23.56 | val MAE   23.58 | lr 2.9e-04 |    14s
+epoch 52 | train MAE   23.54 | val MAE   23.56 | lr 2.7e-04 |    14s
+epoch 53 | train MAE   23.56 | val MAE   23.51 | lr 2.6e-04 |    14s
+epoch 54 | train MAE   23.57 | val MAE   23.59 | lr 2.4e-04 |    14s
+epoch 55 | train MAE   23.53 | val MAE   23.65 | lr 2.2e-04 |    14s
+epoch 56 | train MAE   23.54 | val MAE   23.72 | lr 2.1e-04 |    14s
+epoch 57 | train MAE   23.47 | val MAE   23.52 | lr 1.9e-04 |    14s
+epoch 58 | train MAE   23.46 | val MAE   23.51 | lr 1.8e-04 |    14s
+epoch 59 | train MAE   23.45 | val MAE   23.56 | lr 1.6e-04 |    14s
+epoch 60 | train MAE   23.53 | val MAE   23.50 | lr 1.5e-04 |    14s
+epoch 61 | train MAE   23.43 | val MAE   23.51 | lr 1.3e-04 |    14s
+epoch 62 | train MAE   23.44 | val MAE   23.54 | lr 1.2e-04 |    14s
+epoch 63 | train MAE   23.43 | val MAE   23.52 | lr 1.1e-04 |    14s
+epoch 64 | train MAE   23.41 | val MAE   23.50 | lr 9.5e-05 |    14s
+epoch 65 | train MAE   23.38 | val MAE   23.49 | lr 8.4e-05 |    14s
+epoch 66 | train MAE   23.40 | val MAE   23.49 | lr 7.4e-05 |    14s
+epoch 67 | train MAE   23.32 | val MAE   23.48 | lr 6.4e-05 |    14s
+epoch 68 | train MAE   23.37 | val MAE   23.49 | lr 5.4e-05 |    14s
+epoch 69 | train MAE   23.37 | val MAE   23.48 | lr 4.6e-05 |    14s
+epoch 70 | train MAE   23.31 | val MAE   23.48 | lr 3.8e-05 |    14s
+epoch 71 | train MAE   23.33 | val MAE   23.47 | lr 3.1e-05 |    14s
+epoch 72 | train MAE   23.37 | val MAE   23.45 | lr 2.4e-05 |    14s
+epoch 73 | train MAE   23.31 | val MAE   23.45 | lr 1.9e-05 |    14s
+epoch 74 | train MAE   23.37 | val MAE   23.46 | lr 1.4e-05 |    14s
+epoch 75 | train MAE   23.30 | val MAE   23.47 | lr 9.6e-06 |    14s
+epoch 76 | train MAE   23.30 | val MAE   23.45 | lr 6.2e-06 |    14s
+epoch 77 | train MAE   23.32 | val MAE   23.46 | lr 3.5e-06 |    14s
+epoch 78 | train MAE   23.24 | val MAE   23.45 | lr 1.5e-06 |    14s
+epoch 79 | train MAE   23.42 | val MAE   23.45 | lr 3.9e-07 |    14s
+epoch 80 | train MAE   23.30 | val MAE   23.45 | lr 0.0e+00 |    14s
+{
+  "15min": {
+    "MAE": 22.588,
+    "RMSE": 36.272,
+    "MAPE": 8.57
+  },
+  "30min": {
+    "MAE": 23.378,
+    "RMSE": 38.053,
+    "MAPE": 8.83
+  },
+  "45min": {
+    "MAE": 23.945,
+    "RMSE": 39.353,
+    "MAPE": 9.02
+  },
+  "60min": {
+    "MAE": 24.525,
+    "RMSE": 40.658,
+    "MAPE": 9.22
+  }
+}

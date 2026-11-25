@@ -1,0 +1,2 @@
+features: train 6,000,000 rows, val 1,000,000, test 10,282,310 (all observed test values) | 37 features | 5s
+seasonal naive (wk4 + current deviation)   test MAE 35.804

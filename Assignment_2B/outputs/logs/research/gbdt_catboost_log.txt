@@ -1,0 +1,40 @@
+features: train 6,000,000 rows, val 1,000,000, test 10,282,310 (all observed test values) | 37 features | 6s
+seasonal naive (wk4 + current deviation)   test MAE 35.804
+0:	learn: 243.3229269	test: 251.8097534	best: 251.8097534 (0)	total: 648ms	remaining: 3h 35m 56s
+500:	learn: 26.8018403	test: 27.0446098	best: 27.0446098 (500)	total: 4m 42s	remaining: 3h 3m 28s
+1000:	learn: 25.8445532	test: 26.2221559	best: 26.2221559 (1000)	total: 9m 26s	remaining: 2h 59m 11s
+1500:	learn: 25.3481521	test: 25.8654184	best: 25.8654184 (1500)	total: 14m 9s	remaining: 2h 54m 28s
+2000:	learn: 25.0176609	test: 25.6520079	best: 25.6520079 (2000)	total: 18m 52s	remaining: 2h 49m 47s
+2500:	learn: 24.7631504	test: 25.5006067	best: 25.5006067 (2500)	total: 23m 36s	remaining: 2h 45m 8s
+3000:	learn: 24.5579706	test: 25.4033297	best: 25.4033297 (3000)	total: 28m 23s	remaining: 2h 40m 49s
+3500:	learn: 24.3879325	test: 25.3261969	best: 25.3261754 (3495)	total: 33m 7s	remaining: 2h 36m 8s
+4000:	learn: 24.2387590	test: 25.2684542	best: 25.2684542 (4000)	total: 37m 50s	remaining: 2h 31m 19s
+4500:	learn: 24.1076766	test: 25.2225588	best: 25.2224254 (4496)	total: 42m 34s	remaining: 2h 26m 35s
+5000:	learn: 23.9913739	test: 25.1863202	best: 25.1862376 (4990)	total: 47m 17s	remaining: 2h 21m 51s
+5500:	learn: 23.8849667	test: 25.1632214	best: 25.1632186 (5499)	total: 52m 3s	remaining: 2h 17m 12s
+6000:	learn: 23.7886289	test: 25.1408429	best: 25.1408429 (6000)	total: 56m 48s	remaining: 2h 12m 30s
+6500:	learn: 23.7015430	test: 25.1233309	best: 25.1232235 (6499)	total: 1h 1m 31s	remaining: 2h 7m 45s
+7000:	learn: 23.6215499	test: 25.1113328	best: 25.1112158 (6994)	total: 1h 6m 16s	remaining: 2h 3m 4s
+7500:	learn: 23.5518683	test: 25.1007088	best: 25.1003628 (7480)	total: 1h 11m 1s	remaining: 1h 58m 21s
+8000:	learn: 23.4782491	test: 25.0894592	best: 25.0893880 (7993)	total: 1h 15m 47s	remaining: 1h 53m 39s
+8500:	learn: 23.4137220	test: 25.0822250	best: 25.0821694 (8492)	total: 1h 20m 30s	remaining: 1h 48m 53s
+9000:	learn: 23.3508186	test: 25.0763328	best: 25.0763222 (8995)	total: 1h 25m 15s	remaining: 1h 44m 11s
+9500:	learn: 23.2898357	test: 25.0698768	best: 25.0698057 (9495)	total: 1h 30m 3s	remaining: 1h 39m 31s
+10000:	learn: 23.2350825	test: 25.0642168	best: 25.0642168 (10000)	total: 1h 34m 49s	remaining: 1h 34m 48s
+10500:	learn: 23.1829403	test: 25.0575458	best: 25.0574953 (10485)	total: 1h 39m 35s	remaining: 1h 30m 5s
+11000:	learn: 23.1337003	test: 25.0527644	best: 25.0526223 (10998)	total: 1h 44m 22s	remaining: 1h 25m 22s
+11500:	learn: 23.0869644	test: 25.0486760	best: 25.0486191 (11491)	total: 1h 49m 8s	remaining: 1h 20m 39s
+12000:	learn: 23.0426069	test: 25.0442239	best: 25.0435695 (11954)	total: 1h 53m 51s	remaining: 1h 15m 53s
+12500:	learn: 23.0013987	test: 25.0410990	best: 25.0409919 (12492)	total: 1h 58m 37s	remaining: 1h 11m 9s
+13000:	learn: 22.9615680	test: 25.0376673	best: 25.0376184 (12996)	total: 2h 3m 21s	remaining: 1h 6m 24s
+13500:	learn: 22.9219387	test: 25.0345301	best: 25.0340959 (13429)	total: 2h 8m 5s	remaining: 1h 1m 39s
+14000:	learn: 22.8821762	test: 25.0315186	best: 25.0312415 (13965)	total: 2h 12m 49s	remaining: 56m 54s
+14500:	learn: 22.8448770	test: 25.0289000	best: 25.0285823 (14484)	total: 2h 17m 32s	remaining: 52m 9s
+15000:	learn: 22.8115423	test: 25.0275071	best: 25.0273881 (14995)	total: 2h 22m 15s	remaining: 47m 24s
+Stopped by overfitting detector  (200 iterations wait)
+
+bestTest = 25.02517314
+bestIteration = 15125
+
+Shrink model to first 15126 iterations.
+CatBoost                                   test MAE 25.098 | 15min 23.82 30min 24.79 45min 25.54 60min 26.24 | RMSE 42.18 | MAPE 9.27% | 15125 trees, 145.4 min | top: seasonal_naive, lastweek_slot, yesterday_slot, wk4_slot, last_1
