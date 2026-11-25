@@ -1,6 +1,5 @@
-"""TBRGS GUI (Google Maps style). Run: streamlit run app.py
-Uses the real dataset and trained models when they exist; otherwise it runs in demo mode.
-Optional: put a Google Maps API key in config.json ("google_maps_api_key") to draw on the real Google Maps."""
+"""TBRGS historical replay GUI. Run: streamlit run app.py
+The original Google Maps-style prototype is available with -- --prototype."""
 import json
 import math
 from datetime import datetime
@@ -51,21 +50,34 @@ def label_points(routes, selected):
 
 
 def _path_layer(rows, color, width):
+    if "schematic" in rows and rows.schematic.any():
+        # Split only schematic lines into visible dashes. Labels still use the whole path.
+        segments = []
+        for row in rows.to_dict("records"):
+            if not row["schematic"]:
+                segments.append(row)
+                continue
+            for start, end in zip(row["path"], row["path"][1:]):
+                count = max(2, min(24, math.ceil(math.dist(start, end) / 0.001)))
+                for i in range(count):
+                    dash = [[a + (b-a)*t/count for a, b in zip(start, end)] for t in (i, i+0.65)]
+                    segments.append(dict(row, path=dash))
+        rows = segments
     return pdk.Layer("PathLayer", rows, get_path="path", get_color=color, get_width=width, width_units=PX,
                      width_min_pixels=width, width_max_pixels=width, joint_rounded=True, cap_rounded=True, pickable=True)
 
 
-def build_deck(sites, o, d, routes, selected=0):
+def build_deck(sites, o, d, routes, selected=0, basemap=True):
     """Google Maps style: selected route in blue with a darker edge, alternatives in grey with a time bubble,
     origin A (green) and destination B (red). Every layer carries a `label` column for the tooltip."""
     sites = sites.assign(label=sites.site_id.astype(str) + " " + sites["name"])
     od = sites[sites.site_id.isin([o, d])].copy()
-    od["tag"] = od.site_id.map({o: "A", d: "B"})
+    od["tag"] = od.site_id.map({o: "A/B"} if o == d else {o: "A", d: "B"})
     od["color"] = od.site_id.map({o: GREEN, d: RED})
     spots = label_points(routes, selected) if routes else {}
-    rows = [{"path": r["coords"], "route": i, "label": f"Route {i + 1}: {r['minutes']:.0f} min, {r['km']:.1f} km",
+    rows = [{"path": r["coords"], "schematic": r.get("schematic", False), "route": i, "label": f"Route {i + 1}: {r['minutes']:.0f} min, {r['km']:.1f} km",
              "time": f"{r['minutes']:.0f} min", "lon": spots[i][0], "lat": spots[i][1]} for i, r in enumerate(routes)]
-    cols = ["path", "route", "label", "time", "lon", "lat"]
+    cols = ["path", "schematic", "route", "label", "time", "lon", "lat"]
     alt = pd.DataFrame([r for r in rows if r["route"] != selected], columns=cols)
     sel = pd.DataFrame([r for r in rows if r["route"] == selected], columns=cols)
     layers = [
@@ -90,7 +102,9 @@ def build_deck(sites, o, d, routes, selected=0):
     lat0, lon0 = (min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2
     span = max(max(lons) - min(lons), (max(lats) - min(lats)) / math.cos(math.radians(lat0)), 0.002)
     view = pdk.ViewState(latitude=lat0, longitude=lon0, zoom=math.log2(200 / span))
-    return pdk.Deck(layers=layers, initial_view_state=view, map_style="road", tooltip={"text": "{label}"})
+    return pdk.Deck(layers=layers, initial_view_state=view, map_style="road" if basemap else None,
+                    map_provider="carto" if basemap else None,
+                    tooltip={"text": "{label}"})
 
 
 GOOGLE_HTML = """<div id="map" style="height:__H__px;width:100%;border-radius:12px"></div>
@@ -242,4 +256,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Keep the original prototype available only by explicit request.
+    import sys
+    if "--prototype" in sys.argv:
+        main()
+    else:
+        # Support Streamlit launched from either the repository root or gui/.
+        sys.path.insert(0, str(DIR.resolve().parents[1]))
+        try:
+            from replay_ui import render
+        finally:
+            sys.path.pop(0)
+        render(build_deck)

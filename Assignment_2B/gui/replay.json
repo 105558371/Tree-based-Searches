@@ -1,0 +1,19 @@
+{
+  "dataset": "research_2014_2026",
+  "model": "lstm",
+  "time": "08:00",
+  "presets": {
+    "Off-peak 03:00": "03:00",
+    "Morning peak 08:00": "08:00",
+    "Evening peak 17:00": "17:00"
+  },
+  "horizon": 15,
+  "traffic": [
+    "../research/cache/traffic.npz",
+    "cache/traffic.npz"
+  ],
+  "roads": [
+    "../research/external/road_edges.csv",
+    "cache/road_edges.csv"
+  ]
+}
