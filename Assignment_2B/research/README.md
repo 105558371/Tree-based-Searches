@@ -2,6 +2,7 @@
 
 Six spatio-temporal models trained on the same data, split and metrics, so they can be compared fairly.
 Run commands from `Assignment_2B/`. Separate from `core/tune.py` (which tunes the basic LSTM/GRU/GNN).
+The full experiment log (what we tried, results, what we kept) is in `EXPERIMENTS.md`.
 
 | Step | Command |
 |---|---|
