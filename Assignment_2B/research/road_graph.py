@@ -32,13 +32,44 @@ def haversine_m(lat1, lon1, lat2, lon2):
     return 2 * 6371000 * np.arcsin(np.sqrt(a))
 
 
+
 def load_network(lats, lons):
+    print("Latitude min:", lats.min(), flush=True)
+    print("Latitude max:", lats.max(), flush=True)
+    print("Longitude min:", lons.min(), flush=True)
+    print("Longitude max:", lons.max(), flush=True)
+
+    bbox = (
+        lons.min() - MARGIN_DEG,
+        lats.min() - MARGIN_DEG,
+        lons.max() + MARGIN_DEG,
+        lats.max() + MARGIN_DEG
+    )
+
+    print("Bounding box:", bbox, flush=True)
+
+    if not (
+        -38.1 < lats.min() <= lats.max() < -37.6
+        and 144.8 < lons.min() <= lons.max() < 145.4
+    ):
+        raise ValueError("Invalid SCATS coordinates for Boroondara")
+
     if CACHE.exists():
+        print("Loading cached road graph...")
         return ox.load_graphml(CACHE)
-    bbox = (lons.min() - MARGIN_DEG, lats.min() - MARGIN_DEG, lons.max() + MARGIN_DEG, lats.max() + MARGIN_DEG)
+
+    ox.settings.log_console = True
+    ox.settings.use_cache = True
+
+    print("Downloading road network...", flush=True)
+
     g = ox.graph_from_bbox(bbox, network_type="drive")
+
     CACHE.parent.mkdir(exist_ok=True)
     ox.save_graphml(g, CACHE)
+
+    print("Road network downloaded successfully!")
+
     return g
 
 
