@@ -86,7 +86,7 @@ def road_page(cfg, dataset, sites, days, build_deck):
     def calculate():
         return {r: routing.routes(graph, models.forecast(dataset, r, when, cfg), o, d, k) for r in [model, *compare]}
     result = action("Find Routes", (dataset, when, model, tuple(compare), o, d, k),
-                    " ".join(dict.fromkeys(r for r in reasons if r)), calculate)
+                    " ".join(dict.fromkeys(r for r in reasons if r)), calculate, button_area=st)
     left, center, right = st.columns([1.1, 2.7, 1.2])
     left.subheader("Routes")
     right.subheader("Summary")
