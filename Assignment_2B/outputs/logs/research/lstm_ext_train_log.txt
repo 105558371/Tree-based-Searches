@@ -1,0 +1,46 @@
+LSTM | features ext | device mps | params 19,204 | windows train 350,580 val 35,136 test 65,757
+epoch  1 | train MAE   56.37 | val MAE   42.79 | lr 1.0e-03 |    10s
+epoch  2 | train MAE   38.61 | val MAE   37.21 | lr 1.0e-03 |     9s
+epoch  3 | train MAE   36.26 | val MAE   36.87 | lr 1.0e-03 |     9s
+epoch  4 | train MAE   35.48 | val MAE   36.43 | lr 1.0e-03 |     9s
+epoch  5 | train MAE   34.71 | val MAE   35.89 | lr 1.0e-03 |    11s
+epoch  6 | train MAE   34.01 | val MAE   34.76 | lr 1.0e-03 |    15s
+epoch  7 | train MAE   33.60 | val MAE   35.51 | lr 1.0e-03 |    16s
+epoch  8 | train MAE   33.31 | val MAE   33.65 | lr 1.0e-03 |    13s
+epoch  9 | train MAE   32.98 | val MAE   33.96 | lr 1.0e-03 |     9s
+epoch 10 | train MAE   32.89 | val MAE   33.88 | lr 1.0e-03 |     9s
+epoch 11 | train MAE   32.55 | val MAE   34.99 | lr 1.0e-03 |    14s
+epoch 12 | train MAE   32.31 | val MAE   33.99 | lr 1.0e-03 |    14s
+epoch 13 | train MAE   32.13 | val MAE   33.25 | lr 1.0e-03 |     9s
+epoch 14 | train MAE   32.15 | val MAE   32.89 | lr 1.0e-03 |     9s
+epoch 15 | train MAE   31.98 | val MAE   32.98 | lr 1.0e-03 |     9s
+epoch 16 | train MAE   31.69 | val MAE   32.27 | lr 1.0e-03 |     9s
+epoch 17 | train MAE   31.61 | val MAE   32.49 | lr 1.0e-03 |     9s
+epoch 18 | train MAE   31.71 | val MAE   32.59 | lr 1.0e-03 |     9s
+epoch 19 | train MAE   31.47 | val MAE   32.85 | lr 1.0e-03 |     9s
+epoch 20 | train MAE   31.45 | val MAE   32.82 | lr 1.0e-03 |     9s
+epoch 21 | train MAE   31.60 | val MAE   32.54 | lr 1.0e-03 |     9s
+epoch 22 | train MAE   31.35 | val MAE   32.60 | lr 1.0e-03 |     9s
+early stop
+{
+  "15min": {
+    "MAE": 27.921,
+    "RMSE": 44.442,
+    "MAPE": 10.99
+  },
+  "30min": {
+    "MAE": 30.999,
+    "RMSE": 50.601,
+    "MAPE": 12.02
+  },
+  "45min": {
+    "MAE": 33.852,
+    "RMSE": 56.588,
+    "MAPE": 13.06
+  },
+  "60min": {
+    "MAE": 36.529,
+    "RMSE": 62.637,
+    "MAPE": 14.0
+  }
+}

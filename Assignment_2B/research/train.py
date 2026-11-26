@@ -50,6 +50,7 @@ import torch
 import events
 import more_features
 from graph_wavenet import GraphWaveNet, transition
+from rnn_models import RNNForecaster
 from gnn_models import AGCRN, MTGNN, STGCN
 from more_models import STAEformer, STID
 
@@ -196,11 +197,13 @@ def load(device, features="base"):
 MODELS = {
     "gwn": ("Graph WaveNet", lambda n, adj, c: GraphWaveNet(n, [transition(adj), transition(adj.T)], in_dim=c, horizon=HORIZON)),
     "stgcn": ("STGCN", lambda n, adj, c: STGCN(n, adj, in_dim=c, horizon=HORIZON, in_steps=IN_STEPS)),
-    "agcrn": ("AGCRN", lambda n, adj, c: AGCRN(n, in_dim=c, horizon=HORIZON)),
+    "agcrn": ("AGCRN", lambda n, adj, c: AGCRN(n, in_dim=c, horizon=HORIZON, **MODEL_HP)),
     "mtgnn": ("MTGNN", lambda n, adj, c: MTGNN(n, in_dim=c, horizon=HORIZON, in_steps=IN_STEPS)),
     "stid": ("STID", lambda n, adj, c: STID(n, horizon=HORIZON, in_steps=IN_STEPS)),   # uses flow + time of day only
     "staeformer": ("STAEformer", lambda n, adj, c: STAEformer(n, horizon=HORIZON, in_steps=IN_STEPS, exo_dim=c - 3 if c > 2 else 0,
                                                               **MODEL_HP)),
+    "lstm": ("LSTM", lambda n, adj, c: RNNForecaster("lstm", in_dim=c, horizon=HORIZON, **MODEL_HP)),   # no graph; reads all c channels
+    "gru": ("GRU", lambda n, adj, c: RNNForecaster("gru", in_dim=c, horizon=HORIZON, **MODEL_HP)),
 }
 
 
@@ -273,6 +276,7 @@ def main():
     ap.add_argument("--init", default="")
     ap.add_argument("--fold", default="", help="k/K, e.g. 0/5")
     ap.add_argument("--tsf-cols", default="")
+    ap.add_argument("--no-test", action="store_true", help="skip the test-period evaluation (used by tune.py)")
     args = ap.parse_args()
 
     global IN_STEPS, CLEAN, TRAIN_END, MODEL_HP, FOLD, TSF_COLS
@@ -282,8 +286,8 @@ def main():
     TRAIN_END = np.datetime64(args.train_end)
     MODEL_HP = parse_hp(args.hp)
     FOLD = tuple(map(int, args.fold.split("/"))) if args.fold else None
-    if MODEL_HP and args.model != "staeformer":
-        raise SystemExit("--hp is only for --model staeformer")
+    if MODEL_HP and args.model not in ("staeformer", "lstm", "gru", "agcrn"):
+        raise SystemExit("--hp is only for --model staeformer, lstm, gru, agcrn")
     # keep the last epoch when 2024 is trained on (validation would be in-sample), and in K-fold
     # (so the held-out block is never used to choose anything)
     refit = TRAIN_END > VAL_START or bool(FOLD)
@@ -344,7 +348,7 @@ def main():
                 print("early stop"); break
 
     model.load_state_dict(torch.load(ckpt, map_location=device))
-    test = evaluate(model, data, split["test"], device) if len(split["test"]) else None
+    test = evaluate(model, data, split["test"], device) if len(split["test"]) and not args.no_test else None
     out = {"model": name, "features": args.features, "test_2025_2026": test, "best_val_mae": best,
            "history": history, "args": vars(args)}
     if FOLD:    # every held-out window (per-epoch validation may use only every n-th)

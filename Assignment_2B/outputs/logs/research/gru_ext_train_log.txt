@@ -1,0 +1,53 @@
+GRU | features ext | device mps | params 14,468 | windows train 350,580 val 35,136 test 65,757
+epoch  1 | train MAE   53.44 | val MAE   42.81 | lr 1.0e-03 |    14s
+epoch  2 | train MAE   41.78 | val MAE   39.75 | lr 1.0e-03 |    12s
+epoch  3 | train MAE   37.44 | val MAE   36.95 | lr 1.0e-03 |    12s
+epoch  4 | train MAE   36.08 | val MAE   37.36 | lr 1.0e-03 |    17s
+epoch  5 | train MAE   35.43 | val MAE   36.68 | lr 1.0e-03 |    17s
+epoch  6 | train MAE   34.88 | val MAE   36.81 | lr 1.0e-03 |    14s
+epoch  7 | train MAE   34.82 | val MAE   36.16 | lr 1.0e-03 |    16s
+epoch  8 | train MAE   34.53 | val MAE   36.36 | lr 1.0e-03 |    16s
+epoch  9 | train MAE   34.29 | val MAE   35.83 | lr 1.0e-03 |    13s
+epoch 10 | train MAE   34.12 | val MAE   36.01 | lr 1.0e-03 |    14s
+epoch 11 | train MAE   33.82 | val MAE   34.71 | lr 1.0e-03 |    17s
+epoch 12 | train MAE   33.48 | val MAE   35.23 | lr 1.0e-03 |    17s
+epoch 13 | train MAE   33.23 | val MAE   34.57 | lr 1.0e-03 |    17s
+epoch 14 | train MAE   33.17 | val MAE   34.64 | lr 1.0e-03 |    16s
+epoch 15 | train MAE   32.89 | val MAE   34.05 | lr 1.0e-03 |    17s
+epoch 16 | train MAE   32.59 | val MAE   33.65 | lr 1.0e-03 |    14s
+epoch 17 | train MAE   32.44 | val MAE   33.91 | lr 1.0e-03 |    16s
+epoch 18 | train MAE   32.43 | val MAE   33.14 | lr 1.0e-03 |    17s
+epoch 19 | train MAE   32.22 | val MAE   34.10 | lr 1.0e-03 |    14s
+epoch 20 | train MAE   32.11 | val MAE   33.41 | lr 1.0e-03 |    16s
+epoch 21 | train MAE   32.15 | val MAE   32.98 | lr 1.0e-03 |    16s
+epoch 22 | train MAE   31.89 | val MAE   32.98 | lr 1.0e-03 |    17s
+epoch 23 | train MAE   31.85 | val MAE   33.18 | lr 1.0e-03 |    17s
+epoch 24 | train MAE   31.83 | val MAE   33.52 | lr 1.0e-03 |    15s
+epoch 25 | train MAE   31.68 | val MAE   34.75 | lr 1.0e-03 |    16s
+epoch 26 | train MAE   31.67 | val MAE   33.18 | lr 1.0e-03 |    16s
+epoch 27 | train MAE   31.40 | val MAE   32.50 | lr 1.0e-03 |    13s
+epoch 28 | train MAE   31.38 | val MAE   32.84 | lr 1.0e-03 |    16s
+epoch 29 | train MAE   31.44 | val MAE   32.10 | lr 1.0e-03 |    17s
+epoch 30 | train MAE   31.35 | val MAE   31.67 | lr 1.0e-03 |    17s
+{
+  "15min": {
+    "MAE": 27.51,
+    "RMSE": 44.025,
+    "MAPE": 10.56
+  },
+  "30min": {
+    "MAE": 30.573,
+    "RMSE": 50.123,
+    "MAPE": 11.79
+  },
+  "45min": {
+    "MAE": 33.131,
+    "RMSE": 55.673,
+    "MAPE": 12.77
+  },
+  "60min": {
+    "MAE": 35.703,
+    "RMSE": 61.47,
+    "MAPE": 13.71
+  }
+}

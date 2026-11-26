@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 Assignment_2B/research/cache/
 **/tuning/
+Assignment_2B/data/site_totals_15min_2014_2026.csv
